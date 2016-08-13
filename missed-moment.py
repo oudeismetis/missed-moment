@@ -4,15 +4,15 @@ import os
 import picamera
 
 from time import sleep
+from decouple import config
 from gpiozero import Button
 from gpiozero import LED
 
-DROPBOX_API_KEY = ''
+DROPBOX_API_KEY = config('DROPBOX_API_KEY', default=None)
 
 """
 TODO
-- environment variables
-- Github
+- install script for requirements (dropbox, python-decouple)
 - run headless
 - figure out filetype issues, converting, etc.
 - Video playback speed?
