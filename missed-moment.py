@@ -44,7 +44,7 @@ def capture_video():
     dbx.files_upload('foo', mp4box_file)
 
     # Experiment with avconv encoding
-    os.system('avconv -i {} -vcondec copy {}'.format(raw_file, avconv_file))
+    os.system('avconv -i {} -vcodec copy {}'.format(raw_file, avconv_file))
     dbx.files_upload('foo', avconv_file)
 
 camera.start_recording(stream, format='h264')
