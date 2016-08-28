@@ -32,15 +32,23 @@ def capture_video():
     led.on()
     camera.wait_recording(5)
     file_name = datetime.now().strftime('%Y-%m-%d-%H-%M')
-    raw_file = file_name + '.h264'
-    clean_file = file_name + '.mp4'
+    raw_file = '/tmp/' + file_name + '.h264'
+    mp4box_file = '/tmp/m_' + file_name + '.mp4'
+    avconv_file = '/tmp/a_' + file_name + '.mp4'
     stream.copy_to(raw_file)
     led.off()
-    os.system('MP4Box -add {} {}'.format(raw_file, clean_file))
-    dbx.files_upload('foo', '/home/pi/' + clean_file)
+    # camera.stop_preview()
+
+    # Experiment with MP4Box encoding
+    os.system('MP4Box -add {} {}'.format(raw_file, mp4box_file))
+    dbx.files_upload('foo', mp4box_file)
+
+    # Experiment with avconv encoding
+    os.system('avconv -i {} -vcondec copy {}'.format(raw_file, avconv_file))
+    dbx.files_upload('foo', avconv_file)
 
 camera.start_recording(stream, format='h264')
-camera.start_preview()
+# camera.start_preview()
 
 try:
     while True:
@@ -49,7 +57,7 @@ try:
 finally:
     camera.stop_recording()
     # TODO - Stream needs to be stopped???
-    camera.stop_preview()
+
 
 # button.wait_for_press()
 # camera.start_recording('/home/pi/video.h264')
