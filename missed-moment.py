@@ -3,7 +3,7 @@ import dropbox
 import os
 import picamera
 
-from time import sleep
+# from time import sleep
 from decouple import config
 from gpiozero import Button
 from gpiozero import LED
@@ -12,12 +12,11 @@ DROPBOX_API_KEY = config('DROPBOX_API_KEY', default=None)
 
 """
 TODO
-- install script for requirements (dropbox, python-decouple)
+- install script for requirements (gpac, dropbox, python-decouple)
 - run headless
 - figure out filetype issues, converting, etc.
 - Video playback speed?
 - audio?
-- Wall mountable case with camera holder
 - increase quality? Contrast? etc.
 """
 
@@ -28,14 +27,17 @@ camera = picamera.PiCamera()
 stream = picamera.PiCameraCircularIO(camera, seconds=60)
 dbx = dropbox.Dropbox(DROPBOX_API_KEY)
 
+
 def capture_video():
     led.on()
     camera.wait_recording(5)
-    file_name = datetime.now().strftime('%Y-%m-%d-%H-%M.h264')
-    stream.copy_to(file_name)
+    file_name = datetime.now().strftime('%Y-%m-%d-%H-%M')
+    raw_file = file_name + '.h264'
+    clean_file = file_name + '.mp4'
+    stream.copy_to(raw_file)
     led.off()
-    os.system('MP4Box -add {} {}'.format(file_name, file_name + '.mp4'))
-    dbx.files_upload('foo', '/home/pi/' + file_name + '.mp4')
+    os.system('MP4Box -add {} {}'.format(raw_file, clean_file))
+    dbx.files_upload('foo', '/home/pi/' + clean_file)
 
 camera.start_recording(stream, format='h264')
 camera.start_preview()
