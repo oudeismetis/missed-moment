@@ -6,6 +6,15 @@ A running camera feed that only saves videos when you press a button. How many t
 
 As of 08/28/2016, this project is in the "working prototype" phase of development. It will work, but please be patient with any bugs you are certain to encounter and any holes you may find in this documentation.
 
+## TODO
+
+1. install script for requirements (gpac, dropbox, python-decouple)
+1. run headless instructions
+1. figure out filetype issues, converting, etc.
+1. Video playback speed?
+1. audio?
+1. increase quality? Contrast? etc.
+
 ## Requirements
 
 1. [Raspberry Pi](https://www.raspberrypi.org/products/)
