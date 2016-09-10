@@ -5,14 +5,12 @@ import picamera
 
 from decouple import config
 from gpiozero import Button
-from gpiozero import LED
 
-FILE_CHUNK_SIZE = 10 * 1024 * 1024  # 10MB
+FILE_CHUNK_SIZE = 100 * 1024 * 1024  # 100MB
 DROPBOX_API_KEY = config('DROPBOX_API_KEY', default=None)
 
 
-button = Button(17)
-led = LED(4)
+button = Button(26)
 dbx = dropbox.Dropbox(DROPBOX_API_KEY)
 
 
@@ -33,7 +31,6 @@ def upload_dropbox_file_chucks(file_path, file_size):
 
 
 def capture_video():
-    led.on()
     file_name = datetime.now().strftime('%Y-%m-%d-%H-%M')
 
     # Grab 5 more seconds of video
@@ -54,12 +51,11 @@ def capture_video():
     else:
         upload_dropbox_file_chucks(clean_file, file_size)
 
-    led.off()
-
 
 # Main Function
 with picamera.PiCamera() as camera:
     camera.resolution = (1280, 720)
+    # Keep a buffer of 60sec. (Actually ends up being ~120 for some reason)
     stream = picamera.PiCameraCircularIO(camera, seconds=60)
     camera.start_recording(stream, format='h264')
     button.when_pressed = capture_video
