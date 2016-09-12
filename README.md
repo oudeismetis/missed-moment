@@ -60,6 +60,20 @@ As of 08/28/2016, this project is in the "working prototype" phase of developmen
         python missed-moment.py
     ```
 
+## Production Install (TODO - Work in progress)
+
+1. Copy the `missed-moment` directory to `/home/pi/`
+1. Then...
+
+    ```
+        sudo apt-get install python3-pip
+        sudo pip3 install -r requirements.txt
+        cp missed-moment.sh /etc/init.d/missed-moment
+        sudo chmod +x /etc/init.d/missed-moment
+        sudo update-rc.d missed-moment defaults
+        sudo service missed-moment start
+    ```
+
 ## Other Considerations
 
 - You will need a `.env` file in the root of your project that defines the following keys:
