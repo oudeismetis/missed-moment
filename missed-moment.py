@@ -8,14 +8,12 @@ from gpiozero import Button
 
 FILE_CHUNK_SIZE = 100 * 1024 * 1024  # 100MB
 DROPBOX_API_KEY = config('DROPBOX_API_KEY', default=None)
-
-
 button = Button(26)
-dbx = dropbox.Dropbox(DROPBOX_API_KEY)
 
 
 def upload_dropbox_file_chucks(file_path, file_size):
     f = open(file_path, 'rb')
+    dbx = dropbox.Dropbox(DROPBOX_API_KEY)
     upload_session = dbx.files_upload_session_start(f.read(FILE_CHUNK_SIZE))
     cursor = dropbox.files.UploadSessionCursor(
         session_id=upload_session.session_id, offset=f.tell())
@@ -47,6 +45,7 @@ def capture_video():
     file_size = os.path.getsize(clean_file)
     if file_size <= FILE_CHUNK_SIZE:
         f = open(clean_file, 'rb')
+        dbx = dropbox.Dropbox(DROPBOX_API_KEY)
         dbx.files_upload(f, clean_file)
     else:
         upload_dropbox_file_chucks(clean_file, file_size)
