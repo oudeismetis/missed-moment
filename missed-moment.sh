@@ -28,7 +28,7 @@ case "$1" in
     start)
         start-stop-daemon --start --background \
             --pidfile $PIDFILE --make-pidfile --startas /bin/bash \
-            -- -c "exec stdbuf -oL -eL python3.4 $DAEMON $DAEMONARGS > $LOGFILE 2>&1"
+            -- -c "exec stdbuf -oL -eL python3.5 $DAEMON $DAEMONARGS > $LOGFILE 2>&1"
         log_end_msg $?
         ;;
     stop)

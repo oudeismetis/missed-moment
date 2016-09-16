@@ -1,10 +1,12 @@
 from datetime import datetime
-import dropbox
 import os
-import picamera
+import subprocess
 
 from decouple import config
+from dropbox import Dropbox, files as dbx_files
 from gpiozero import Button
+import picamera
+
 
 FILE_CHUNK_SIZE = 100 * 1024 * 1024  # 100MB
 DROPBOX_API_KEY = config('DROPBOX_API_KEY', default=None)
@@ -12,20 +14,20 @@ button = Button(26)
 
 
 def upload_dropbox_file_chucks(file_path, file_size):
-    f = open(file_path, 'rb')
-    dbx = dropbox.Dropbox(DROPBOX_API_KEY)
-    upload_session = dbx.files_upload_session_start(f.read(FILE_CHUNK_SIZE))
-    cursor = dropbox.files.UploadSessionCursor(
-        session_id=upload_session.session_id, offset=f.tell())
-    commit = dropbox.files.CommitInfo(path=file_path)
-    while f.tell() < file_size:
-        if ((file_size - f.tell()) <= FILE_CHUNK_SIZE):
-            dbx.files_upload_session_finish(
-                f.read(FILE_CHUNK_SIZE), cursor, commit)
-        else:
-            dbx.files_upload_session_append(
-                f.read(FILE_CHUNK_SIZE), cursor.session_id, cursor.offset)
-            cursor.offset = f.tell()
+    with Dropbox(DROPBOX_API_KEY) as dbx:
+        f = open(file_path, 'rb')
+        session = dbx.files_upload_session_start(f.read(FILE_CHUNK_SIZE))
+        cursor = dbx_files.UploadSessionCursor(
+            session_id=session.session_id, offset=f.tell())
+        commit = dbx_files.CommitInfo(path=file_path)
+        while f.tell() < file_size:
+            if ((file_size - f.tell()) <= FILE_CHUNK_SIZE):
+                dbx.files_upload_session_finish(
+                    f.read(FILE_CHUNK_SIZE), cursor, commit)
+            else:
+                dbx.files_upload_session_append(
+                    f.read(FILE_CHUNK_SIZE), cursor.session_id, cursor.offset)
+                cursor.offset = f.tell()
 
 
 def capture_video():
@@ -40,15 +42,21 @@ def capture_video():
 
     # Convert to .mp4 and upload
     clean_file = '/tmp/' + file_name + '.mp4'
-    os.system('MP4Box -fps 30 -add {} {}'.format(raw_file, clean_file))
+    mp4box_cmd = 'MP4Box -fps 30 -add {} {}'.format(raw_file, clean_file)
+    try:
+        subprocess.run(mp4box_cmd, shell=True, check=True)
 
-    file_size = os.path.getsize(clean_file)
-    if file_size <= FILE_CHUNK_SIZE:
-        f = open(clean_file, 'rb')
-        dbx = dropbox.Dropbox(DROPBOX_API_KEY)
-        dbx.files_upload(f, clean_file)
-    else:
-        upload_dropbox_file_chucks(clean_file, file_size)
+        file_size = os.path.getsize(clean_file)
+        if file_size <= FILE_CHUNK_SIZE:
+            with Dropbox(DROPBOX_API_KEY) as dbx:
+                f = open(clean_file, 'rb')
+                dbx.files_upload(f, clean_file)
+        else:
+            upload_dropbox_file_chucks(clean_file, file_size)
+    except subprocess.CalledProcessError as e:
+        print('Error while running MP4Box - {}'.format(e))
+    except Exception as e:
+        print('Unhandled exception while uploading files - {}'.format(e))
 
 
 # Main Function
