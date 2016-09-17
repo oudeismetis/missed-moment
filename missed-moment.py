@@ -14,20 +14,20 @@ button = Button(26)
 
 
 def upload_dropbox_file_chucks(file_path, file_size):
-    with Dropbox(DROPBOX_API_KEY) as dbx:
-        f = open(file_path, 'rb')
-        session = dbx.files_upload_session_start(f.read(FILE_CHUNK_SIZE))
-        cursor = dbx_files.UploadSessionCursor(
-            session_id=session.session_id, offset=f.tell())
-        commit = dbx_files.CommitInfo(path=file_path)
-        while f.tell() < file_size:
-            if ((file_size - f.tell()) <= FILE_CHUNK_SIZE):
-                dbx.files_upload_session_finish(
-                    f.read(FILE_CHUNK_SIZE), cursor, commit)
-            else:
-                dbx.files_upload_session_append(
-                    f.read(FILE_CHUNK_SIZE), cursor.session_id, cursor.offset)
-                cursor.offset = f.tell()
+    dbx = Dropbox(DROPBOX_API_KEY)
+    f = open(file_path, 'rb')
+    session = dbx.files_upload_session_start(f.read(FILE_CHUNK_SIZE))
+    cursor = dbx_files.UploadSessionCursor(
+        session_id=session.session_id, offset=f.tell())
+    commit = dbx_files.CommitInfo(path=file_path)
+    while f.tell() < file_size:
+        if ((file_size - f.tell()) <= FILE_CHUNK_SIZE):
+            dbx.files_upload_session_finish(
+                f.read(FILE_CHUNK_SIZE), cursor, commit)
+        else:
+            dbx.files_upload_session_append(
+                f.read(FILE_CHUNK_SIZE), cursor.session_id, cursor.offset)
+            cursor.offset = f.tell()
 
 
 def capture_video():
@@ -48,9 +48,9 @@ def capture_video():
 
         file_size = os.path.getsize(clean_file)
         if file_size <= FILE_CHUNK_SIZE:
-            with Dropbox(DROPBOX_API_KEY) as dbx:
-                f = open(clean_file, 'rb')
-                dbx.files_upload(f, clean_file)
+            dbx = Dropbox(DROPBOX_API_KEY)
+            f = open(clean_file, 'rb')
+            dbx.files_upload(f, clean_file)
         else:
             upload_dropbox_file_chucks(clean_file, file_size)
     except subprocess.CalledProcessError as e:
