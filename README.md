@@ -29,12 +29,12 @@ As of 08/28/2016, this project is in the "working prototype" phase of developmen
 1. Boot into the Raspberry Pi
 1. Make sure you've enabled the camera module in the settings
 1. NOOBS comes preconfigured with two versions of Python with 2.7 being the default. We use 3.5+, so setup [virtualenv](http://docs.python-guide.org/en/latest/dev/virtualenvs/) in the project directory and switch the python verion
+1. If your Raspberry Pi has 3.4 instead, follow [these instructions](http://wyre-it.co.uk/blog/latestpython/) to install.
 1. open terminal
 
     ```
         git clone git@github.com:oudeismetis/missed-moment.git
         cd missed-moment
-        sudo apt-get install python3.5
         virtualenv -p /usr/bin/python3.5 venv
     ```
 
@@ -67,7 +67,6 @@ As of 08/28/2016, this project is in the "working prototype" phase of developmen
 1. Then...
 
     ```
-        sudo apt-get install python3-pip
         sudo pip3 install -r requirements.txt
         cp missed-moment.sh /etc/init.d/missed-moment
         sudo chmod +x /etc/init.d/missed-moment
