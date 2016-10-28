@@ -7,7 +7,7 @@ FILE_CHUNK_SIZE = 100 * 1024 * 1024  # 100MB
 DROPBOX_API_KEY = config('DROPBOX_API_KEY', default=None)
 
 
-def upload_dropbox_file_chucks(file_path, file_size):
+def _upload_dropbox_file_chucks(file_path, file_size):
     dbx = Dropbox(DROPBOX_API_KEY)
     f = open(file_path, 'rb')
     session = dbx.files_upload_session_start(f.read(FILE_CHUNK_SIZE))
@@ -36,6 +36,6 @@ def upload_to_dropbox(video_file_path):
             f = open(video_file_path, 'rb')
             dbx.files_upload(f, video_file_path)
         else:
-            upload_dropbox_file_chucks(video_file_path, file_size)
+            _upload_dropbox_file_chucks(video_file_path, file_size)
     except Exception as e:
         print('Unhandled exception while uploading files - {}'.format(e))
