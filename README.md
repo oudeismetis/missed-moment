@@ -72,6 +72,10 @@ As of 08/28/2016, this project is in the "working prototype" phase of developmen
         sudo chmod +x /etc/init.d/missed-moment
         sudo update-rc.d missed-moment defaults
         sudo service missed-moment start
+        cp missed-moment-usb.sh /etc/init.d/missed-moment-usb
+        sudo chmod +x /etc/init.d/missed-moment-usb
+        sudo update-rc.d missed-moment-usb defaults
+        sudo service missed-moment-usb start
     ```
 
 ## Other Considerations
