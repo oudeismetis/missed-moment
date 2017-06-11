@@ -4,16 +4,16 @@ A running camera feed that only saves videos when you press a button. How many t
 
 ## Project Status
 
-As of 08/28/2016, this project is in the "working prototype" phase of development. It will work, but please be patient with any bugs you are certain to encounter and any holes you may find in this documentation.
+As of 06/11/2017, this project is in the "working prototype" phase of development. It will work, but please be patient with any bugs you are certain to encounter and any holes you may find in this documentation.
 
 ## TODO
 
-1. install script for requirements (gpac, dropbox, python-decouple)
 1. run headless instructions
 1. figure out filetype issues, converting, etc.
 1. Video playback speed?
 1. audio?
 1. increase quality? Contrast? etc.
+1. USB export/eject fails? Device specific issue?
 
 ## Requirements
 
@@ -50,10 +50,7 @@ As of 08/28/2016, this project is in the "working prototype" phase of developmen
 1. Install Requirements
 
     ```
-        pip install python-decouple
-        pip install dropbox
-        pip install picamera
-        pip install gpiozero
+        pip install -r requirements.txt
     ```
 1. Startup the application:
 
@@ -80,9 +77,44 @@ As of 08/28/2016, this project is in the "working prototype" phase of developmen
 
 ## Other Considerations
 
-- You will need a `.env` file in the root of your project that defines the following keys:
+- missed-moment is a "Security First" IoT project. As such, internet access is not required for those paranoid about a constant running camera in their home. Videos can be retrieved via SSH/SCP or USB deaddrop with simple configuration.
+- Extra features like Dropbox and Slack are unoffically supported and require a `.env` file in the root of your project that define key(s):
 
+
+### Dropbox
+1. Uncomment out the line in `requirements.txt` that installs the dropbox python SDK.
+1. Add the following to you `.env`
 
     ```
         DROPBOX_API_KEY=[Get a folder-specific APP key connected to your Dropbox account]
     ```
+
+### Slack
+1. If you want slack notifications, log into Slack and [create a bot user](https://api.slack.com/bot-users)
+1. Uncomment out the line in `requirements.txt` that installs the slack python SDK.
+1. Add the following to you `.env`
+
+    ```
+        SLACK_API_TOKEN=[Not supported yet. Work in progress. PR's welcome.]
+    ```
+
+## Troubleshooting
+
+- While ssh'd onto the raspberry pi
+
+    ```
+        tail -f /var/log/missed-moment.log
+    ```
+
+or
+
+    ```
+        tail -f /var/log/missed-moment-usb.log
+    ```
+
+- If no log appears, check for the presence of `/var/run/missed-moment*.pid`
+- A missing file there means the process is not running.
+- If there is a file there, the contents will have a process id
+- run `top` and look for that process id. You should see that a python process is running.
+- Note that the `missed-moment-usb` process is an optional process that only does work when it detects that a USB memory stick has been connected
+- The main application is just called `missed-moment`

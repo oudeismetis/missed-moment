@@ -22,11 +22,11 @@ def capture_video():
     camera.wait_recording(5)
 
     # Write current stream to file
-    raw_file = MEDIA_DIR + '/' + file_name + '.h264'
+    raw_file = '{}/{}.h264'.format(MEDIA_DIR, file_name)
     stream.copy_to(raw_file)
 
     # Convert to .mp4
-    clean_file = MEDIA_DIR + '/' + file_name + '.mp4'
+    clean_file = '{}/{}.mp4'.format(MEDIA_DIR, file_name)
     mp4box_cmd = 'MP4Box -fps 30 -add {} {}'.format(raw_file, clean_file)
     try:
         subprocess.run(mp4box_cmd, shell=True, check=True)

@@ -1,5 +1,5 @@
 from os import listdir
-from os.path import exists, expanduser, isfile, join
+from os.path import exists, expanduser, isfile
 import re
 from subprocess import CalledProcessError, check_call
 
@@ -11,9 +11,11 @@ USB_DIR = '/missed_moment_usb'
 
 
 def _copy_files():
-    for filename in listdir('/tmp/'):
-        full_path = join('/tmp/', filename)
-        dest = join(USB_DIR, filename)
+    print('==============')
+    print('Writing files to attached USB device')
+    for filename in listdir(MEDIA_DIR):
+        full_path = '{}/{}'.format(MEDIA_DIR, filename)
+        dest = '{}/{}'.format(USB_DIR, filename)
         if video_pattern.fullmatch(filename) and isfile(full_path):
             print('Moving {} to {}'.format(full_path, dest))
             # TODO test via su to the user running the process
