@@ -1,19 +1,22 @@
-
-from time import gmtime, strftime
+import logging
 
 from decouple import config
 from slackclient import SlackClient
 
-SLACK_API_TOKEN = config('SLACK_API_KEY', default=None)
+SLACK_API_TOKEN = config('SLACK_API_TOKEN', default=None)
 
 
-def slack(msg):
+def slack(file_path, file_name):
     """
-    Slack is an unoffical feature - This is a work in progress.
+    Slack is an unoffical feature.
     """
-    try:
-        slack = '{} {}'.format(msg, strftime("%Y-%m-%d %H:%M:%S", gmtime()))
-        sc = SlackClient(SLACK_API_TOKEN)
-        sc.api_call('chat.postMessage', channel='#missed-moment', text=slack)
-    except Exception as e:
-        print('Unhandled exception while uploading files - {}'.format(e))
+    if SLACK_API_TOKEN:
+        try:
+            sc = SlackClient(SLACK_API_TOKEN)
+            with open(file_path, 'rb') as f:
+                response = sc.api_call('files.upload', file=f, filetype='mp4',
+                                       channels='samantha', filename=file_name)
+                if not response['ok']:
+                    logging.error('Error from Slack {}'.format(response))
+        except Exception as e:
+            logging.error('Unhandled exception uploading files - {}'.format(e))

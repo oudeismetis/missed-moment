@@ -1,22 +1,26 @@
 from datetime import datetime
-import subprocess
+import logging
 from os.path import exists, expanduser
+import subprocess
 from subprocess import check_call
 
 from gpiozero import Button
 import picamera
 
+from export.slack import slack
+
 button = Button(26)
 camera = picamera.PiCamera()
 camera.resolution = (1280, 720)
-# Keep a buffer of 60sec. (Actually ends up being ~120 for some reason)
-stream = picamera.PiCameraCircularIO(camera, seconds=60)
+# Keep a buffer of 30sec. (Actually ends up being ~60 for reasons)
+stream = picamera.PiCameraCircularIO(camera, seconds=30)
 
 MEDIA_DIR = '/missed_moment_media'
 
 
 def capture_video():
-    file_name = 'missed-moment-' + datetime.now().strftime('%Y-%m-%d-%H-%M')
+    file_name = 'missed-moment-{}'.format(
+        datetime.now().strftime('%Y-%m-%d-%H-%M'))
 
     # Grab 5 more seconds of video
     camera.wait_recording(5)
@@ -30,15 +34,16 @@ def capture_video():
     mp4box_cmd = 'MP4Box -fps 30 -add {} {}'.format(raw_file, clean_file)
     try:
         subprocess.run(mp4box_cmd, shell=True, check=True)
-
-        # TODO - previous dropbox logic started here
+        slack(clean_file, file_name)
+        # upload_to_dropbox(clean_file)
     except subprocess.CalledProcessError as e:
-        print('Error while running MP4Box - {}'.format(e))
+        logging.error('Error while running MP4Box - {}'.format(e))
     except Exception as e:
-        print('Unhandled exception while uploading files - {}'.format(e))
+        logging.error('Unhandled exception uploading files - {}'.format(e))
 
 
 def main():
+    logging.basicConfig(level=logging.WARNING)
     if not exists(MEDIA_DIR):
         check_call(['sudo', 'mkdir', expanduser(MEDIA_DIR)])
     camera.start_recording(stream, format='h264')
