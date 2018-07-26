@@ -1,6 +1,6 @@
 # dropbox==6.8.0
 # slackclient==1.0.5
 gpiozero==1.3.1
-picamera==1.12
+picamera==1.13
 python-decouple==3.0
 pyudev==0.21.0

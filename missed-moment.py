@@ -19,8 +19,7 @@ MEDIA_DIR = '/missed_moment_media'
 
 
 def capture_video():
-    file_name = 'missed-moment-{}'.format(
-        datetime.now().strftime('%Y-%m-%d-%H-%M'))
+    file_name = 'missed-moment-{}'.format(datetime.now().strftime('%Y-%m-%d-%H-%M'))
 
     # Grab 5 more seconds of video
     camera.wait_recording(5)
@@ -29,9 +28,12 @@ def capture_video():
     raw_file = '{}/{}.h264'.format(MEDIA_DIR, file_name)
     stream.copy_to(raw_file)
 
+    # Write audio to file
+    audio_file = '{}/{}.mp3'.format(MEDIA_DIR, file_name)
+
     # Convert to .mp4
     clean_file = '{}/{}.mp4'.format(MEDIA_DIR, file_name)
-    mp4box_cmd = 'MP4Box -fps 30 -add {} {}'.format(raw_file, clean_file)
+    mp4box_cmd = 'MP4Box -fps 30 -add {} -add {} {}'.format(raw_file, audio_file, clean_file)
     try:
         subprocess.run(mp4box_cmd, shell=True, check=True)
         slack(clean_file, file_name)
