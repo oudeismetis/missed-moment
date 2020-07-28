@@ -7,7 +7,7 @@ from subprocess import check_call
 from gpiozero import Button
 import picamera
 
-from export.slack import slack
+# TODO from export.slack import slack
 
 button = Button(26)
 camera = picamera.PiCamera()
@@ -16,7 +16,6 @@ camera.resolution = (1280, 720)
 stream = picamera.PiCameraCircularIO(camera, seconds=30)
 
 MEDIA_DIR = '/missed_moment_media'
-
 
 def capture_video():
     file_name = 'missed-moment-{}'.format(
@@ -34,7 +33,7 @@ def capture_video():
     mp4box_cmd = 'MP4Box -fps 30 -add {} {}'.format(raw_file, clean_file)
     try:
         subprocess.run(mp4box_cmd, shell=True, check=True)
-        slack(clean_file, file_name)
+        # TODO slack(clean_file, file_name)
         # upload_to_dropbox(clean_file)
     except subprocess.CalledProcessError as e:
         logging.error('Error while running MP4Box - {}'.format(e))
@@ -43,10 +42,13 @@ def capture_video():
 
 
 def main():
-    logging.basicConfig(level=logging.WARNING)
+    logging.basicConfig(level=logging.INFO)
     if not exists(MEDIA_DIR):
         check_call(['sudo', 'mkdir', expanduser(MEDIA_DIR)])
+        # add write permissions for all
+        check_call(['sudo', 'chmod', 'a+w', expanduser(MEDIA_DIR)])
     camera.start_recording(stream, format='h264')
+    logging.info('Missed moment ready to save a moment!')
     button.when_pressed = capture_video
     try:
         while True:

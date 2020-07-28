@@ -4,7 +4,7 @@ A running camera feed that only saves videos when you press a button. How many t
 
 ## Project Status
 
-As of 06/11/2017, this project is in the "working prototype" phase of development. It will work, but please be patient with any bugs you are certain to encounter and any holes you may find in this documentation.
+As of 07/28/2020 with "Raspbian GNU/Linux 10 (buster)" OS, this project is in the "working prototype" phase of development. It will work, but please be patient with any bugs you are certain to encounter and any holes you may find in this documentation.
 
 ## TODO
 
@@ -19,44 +19,45 @@ As of 06/11/2017, this project is in the "working prototype" phase of developmen
 
 1. [Raspberry Pi](https://www.raspberrypi.org/products/)
 1. Raspberry Pi [camera module](https://www.raspberrypi.org/products/camera-module-v2/)
-1. SD card with NOOBS (minimum 4GB)
-1. Network access to the Pi (wifi for Pi3, ethernet for Pi2)
+1. SD card with Raspbian GNU/Linux 10 OS (minimum OS and SD Card size 4GB)
+1. Network access to the Pi (WiFi for Pi3, WiFi/ethernet for Pi2)
 1. Suggest wall mountable case for the Pi ([Vilros](http://www.vilros.com/) has a good case with a mount for the camera)
+1. Tactile button and female-to-female jumper lead to get input (By default, missed-moment uses GPIO 26/Pin 37 and the Ground on Pin 39 to attach the button [GPI Reference](https://www.raspberrypi.org/documentation/usage/gpio/)) 
 
 ## Installation
 
-1. Install [NOOBS](https://www.raspberrypi.org/downloads/noobs/) on the Pi
-1. Boot into the Raspberry Pi
-1. Make sure you've enabled the camera module in the settings
-1. NOOBS comes preconfigured with two versions of Python with 2.7 being the default. We use 3.5+, so setup [virtualenv](http://docs.python-guide.org/en/latest/dev/virtualenvs/) in the project directory and switch the python verion
-1. If your Raspberry Pi has 3.4 instead, follow [these instructions](http://wyre-it.co.uk/blog/latestpython/) to install.
-1. open terminal
+1. Download a copy of missed-moment to your local computer
 
     ```
         git clone git@github.com:oudeismetis/missed-moment.git
-        cd missed-moment
-        virtualenv -p /usr/bin/python3.5 venv
     ```
-
-
-1. Create a .env file at the root of the project. (See below for .env contents)
+1. Install the OS on the Pi using method of choice.  e.g. [Raspberry Pi Imager](https://www.raspberrypi.org/documentation/installation/installing-images/) or [NOOBS](https://www.raspberrypi.org/downloads/noobs/) 
+1. Boot into the Raspberry Pi
+1. Make sure you've enabled the camera module in the settings
+1. Missed moment requires Python 3.5+ to interface with the camera.  Raspbian GNU/Linux 10 OS comes with both Python 2.7 and Python 3.7.
 1. Install GPAC to do video format opperations:
 
     ```
-        sudo apt-get update
-        sudo apt-get install gpac
+        sudo apt update
+        sudo apt install gpac
     ```
 
-1. Install Requirements
+1. Install Python libraries
 
     ```
-        pip install -r requirements.txt
+        pip3 install -r requirements.txt
     ```
+
+1. Copy the `missed-moment` directory to `/home/pi/`
+
 1. Startup the application:
 
     ```
-        python missed-moment.py
+        cd /home/pi/missed-moment
+        python3 missed-moment.py
     ```
+1. Missed moment is ready for use, push the button to save a moment!
+
 
 ## Production Install (TODO - Work in progress)
 
@@ -100,17 +101,18 @@ As of 06/11/2017, this project is in the "working prototype" phase of developmen
 
 ## Troubleshooting
 
+1.  Installation
+- While ssh'd onto the raspberry pi - logs should print to the screen
+
+1.  Production Installation
+
 - While ssh'd onto the raspberry pi
 
     ```
         tail -f /var/log/missed-moment.log
-    ```
-
-or
-
-    ```
         tail -f /var/log/missed-moment-usb.log
     ```
+
 
 - If no log appears, check for the presence of `/var/run/missed-moment*.pid`
 - A missing file there means the process is not running.
