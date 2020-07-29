@@ -17,6 +17,7 @@ stream = picamera.PiCameraCircularIO(camera, seconds=30)
 
 MEDIA_DIR = '/missed_moment_media'
 
+
 def capture_video():
     file_name = 'missed-moment-{}'.format(
         datetime.now().strftime('%Y-%m-%d-%H-%M'))
@@ -48,13 +49,14 @@ def main():
         # add write permissions for all
         check_call(['sudo', 'chmod', 'a+w', expanduser(MEDIA_DIR)])
     camera.start_recording(stream, format='h264')
-    logging.info('Missed moment ready to save a moment!')
+    logging.info('missed-moment ready to save a moment!')
     button.when_pressed = capture_video
     try:
         while True:
             camera.wait_recording(1)
     finally:
         camera.stop_recording()
+
 
 if __name__ == '__main__':
     main()

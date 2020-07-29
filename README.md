@@ -4,7 +4,7 @@ A running camera feed that only saves videos when you press a button. How many t
 
 ## Project Status
 
-As of 07/28/2020 with "Raspbian GNU/Linux 10 (buster)" OS, this project is in the "working prototype" phase of development. It will work, but please be patient with any bugs you are certain to encounter and any holes you may find in this documentation.
+As of 07/28/2020 with Raspberry Pi OS, this project is in the "working prototype" phase of development. It will work, but please be patient with any bugs you are certain to encounter and any holes you may find in this documentation.
 
 ## TODO
 
@@ -19,10 +19,11 @@ As of 07/28/2020 with "Raspbian GNU/Linux 10 (buster)" OS, this project is in th
 
 1. [Raspberry Pi](https://www.raspberrypi.org/products/)
 1. Raspberry Pi [camera module](https://www.raspberrypi.org/products/camera-module-v2/)
-1. SD card with Raspbian GNU/Linux 10 OS (minimum OS and SD Card size 4GB)
-1. Network access to the Pi (WiFi for Pi3, WiFi/ethernet for Pi2)
+1. SD card with Raspberry Pi OS (minimum OS and SD Card size 4GB)
+1. Network access to the Pi (some older models don't have WiFi/ethernet)
 1. Suggest wall mountable case for the Pi ([Vilros](http://www.vilros.com/) has a good case with a mount for the camera)
-1. Tactile button and female-to-female jumper lead to get input (By default, missed-moment uses GPIO 26/Pin 37 and the Ground on Pin 39 to attach the button [GPI Reference](https://www.raspberrypi.org/documentation/usage/gpio/)) 
+1. Tactile button that can plug into two pins on the Pi board to get input (By default, missed-moment uses GPIO 26/Pin 37 and the Ground on Pin 39 to attach the button [GPIO Reference](https://www.raspberrypi.org/documentation/usage/gpio/)) 
+    - here's an [example of one to buy](https://www.amazon.com/Warmstor-3-Pack-Desktop-Button-Computer/dp/B072FMVZJZ/ref=sr_1_3?dchild=1&keywords=2+pin+pc+desktop+power+cable&qid=1596030325&sr=8-3) (or you can make your own)
 
 ## Installation
 
@@ -34,8 +35,8 @@ As of 07/28/2020 with "Raspbian GNU/Linux 10 (buster)" OS, this project is in th
 1. Install the OS on the Pi using method of choice.  e.g. [Raspberry Pi Imager](https://www.raspberrypi.org/documentation/installation/installing-images/) or [NOOBS](https://www.raspberrypi.org/downloads/noobs/) 
 1. Boot into the Raspberry Pi
 1. Make sure you've enabled the camera module in the settings
-1. Missed moment requires Python 3.5+ to interface with the camera.  Raspbian GNU/Linux 10 OS comes with both Python 2.7 and Python 3.7.
-1. Install GPAC to do video format opperations:
+1. missed-moment requires Python 3.5+ to interface with the camera
+1. Install GPAC to do video format operations:
 
     ```
         sudo apt update
@@ -56,7 +57,7 @@ As of 07/28/2020 with "Raspbian GNU/Linux 10 (buster)" OS, this project is in th
         cd /home/pi/missed-moment
         python3 missed-moment.py
     ```
-1. Missed moment is ready for use, push the button to save a moment!
+1. missed-moment is ready for use, push the button to save a moment!
 
 
 ## Production Install (TODO - Work in progress)
@@ -101,12 +102,13 @@ As of 07/28/2020 with "Raspbian GNU/Linux 10 (buster)" OS, this project is in th
 
 ## Troubleshooting
 
+- missed-moment is running with the default "pi" user (or user with same permissions)
+
 1.  Installation
-- While ssh'd onto the raspberry pi - logs should print to the screen
+    - While ssh'd onto the raspberry pi - logs should print to the screen
 
 1.  Production Installation
-
-- While ssh'd onto the raspberry pi
+    - While ssh'd onto the raspberry pi
 
     ```
         tail -f /var/log/missed-moment.log
