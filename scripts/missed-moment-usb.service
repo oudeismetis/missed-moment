@@ -1,0 +1,14 @@
+[Unit]
+Description=missed-moment-usb service
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 -u usb.py
+WorkingDirectory=/home/pi/missed-moment/export
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=pi
+
+[Install]
+WantedBy=multi-user.target

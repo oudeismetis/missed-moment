@@ -13,7 +13,7 @@ As of 07/28/2020 with Raspberry Pi OS, this project is in the "working prototype
 1. Video playback speed?
 1. audio?
 1. increase quality? Contrast? etc.
-1. USB export/eject fails? Device specific issue?
+1. USB with NTFS file system support
 
 ## Requirements
 
@@ -36,11 +36,12 @@ As of 07/28/2020 with Raspberry Pi OS, this project is in the "working prototype
 1. Boot into the Raspberry Pi
 1. Make sure you've enabled the camera module in the settings
 1. missed-moment requires Python 3.5+ to interface with the camera
-1. Install GPAC to do video format operations:
+1. Install GPAC to do video format operations and exfat-fuse for USB support
 
     ```
         sudo apt update
         sudo apt install gpac
+        sudo apt install exfat-fuse
     ```
 
 1. Install Python libraries
@@ -51,7 +52,7 @@ As of 07/28/2020 with Raspberry Pi OS, this project is in the "working prototype
 
 1. Copy the `missed-moment` directory to `/home/pi/`
 
-1. Startup the application:
+1. Startup the application
 
     ```
         cd /home/pi/missed-moment
@@ -60,32 +61,27 @@ As of 07/28/2020 with Raspberry Pi OS, this project is in the "working prototype
 1. missed-moment is ready for use, push the button to save a moment!
 
 
-## Production Install (TODO - Work in progress)
+## Production Install
 
 1. Copy the `missed-moment` directory to `/home/pi/`
 1. Then...
 
     ```
-        sudo pip3 install -r requirements.txt
-        cp missed-moment.sh /etc/init.d/missed-moment
-        sudo chmod +x /etc/init.d/missed-moment
-        sudo update-rc.d missed-moment defaults
-        sudo service missed-moment start
-        cp missed-moment-usb.sh /etc/init.d/missed-moment-usb
-        sudo chmod +x /etc/init.d/missed-moment-usb
-        sudo update-rc.d missed-moment-usb defaults
-        sudo service missed-moment-usb start
+        chmod a+x install.sh
+        ./install.sh
     ```
+1. missed-moment is ready for use, push the button to save a moment!
+1. missed-moment-usb is ready for use, grab videos to a USB
 
 ## Other Considerations
 
-- missed-moment is a "Security First" IoT project. As such, internet access is not required for those paranoid about a constant running camera in their home. Videos can be retrieved via SSH/SCP or USB deaddrop with simple configuration.
+- missed-moment is a "Security First" IoT project. As such, internet access is not required for those paranoid about a constant running camera in their home. Videos can be retrieved via SSH/SCP or USB dead drop with simple configuration.
 - Extra features like Dropbox and Slack are unoffically supported and require a `.env` file in the root of your project that define key(s):
 
 
 ### Dropbox
 1. Uncomment out the line in `requirements.txt` that installs the dropbox python SDK.
-1. Add the following to you `.env`
+1. Add the following to the `.env` file
 
     ```
         DROPBOX_API_KEY=[Get a folder-specific APP key connected to your Dropbox account]
@@ -102,23 +98,24 @@ As of 07/28/2020 with Raspberry Pi OS, this project is in the "working prototype
 
 ## Troubleshooting
 
-- missed-moment is running with the default "pi" user (or user with same permissions)
+- missed-moment should be running with the default "pi" user
+- missed-moment-usb currently only supports USB with FAT file system
 
 1.  Installation
     - While ssh'd onto the raspberry pi - logs should print to the screen
 
 1.  Production Installation
-    - While ssh'd onto the raspberry pi
+    - While ssh'd onto the raspberry pi, to view missed-moment/missed-moment-usb status and logs (if you want to tail the logs add "-f" option to journalctl)
 
     ```
-        tail -f /var/log/missed-moment.log
-        tail -f /var/log/missed-moment-usb.log
+        sudo systemctl status missed-moment
+        sudo systemctl status missed-moment-usb
+        journalctl -u missed-moment
+        journalctl -u missed-moment-usb
     ```
 
-
-- If no log appears, check for the presence of `/var/run/missed-moment*.pid`
-- A missing file there means the process is not running.
-- If there is a file there, the contents will have a process id
-- run `top` and look for that process id. You should see that a python process is running.
-- Note that the `missed-moment-usb` process is an optional process that only does work when it detects that a USB memory stick has been connected
-- The main application is just called `missed-moment`
+    - The main application is called `missed-moment`
+    - The USB dead drop application is called `missed-moment-usb`
+    - run `ps -ef | grep python` to look for both processes running
+    - run `top` and look for python process(es)
+    - Note that the `missed-moment-usb` process is an optional process that only does work when it detects that a USB memory stick has been connected
