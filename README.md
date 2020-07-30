@@ -62,7 +62,11 @@ As of 07/28/2020 with Raspberry Pi OS, this project is in the "working prototype
 
 
 ## Production Install
-
+1. Download a copy of missed-moment to your local computer
+1. Install the OS on the Pi using method of choice.  e.g. [Raspberry Pi Imager](https://www.raspberrypi.org/documentation/installation/installing-images/) or [NOOBS](https://www.raspberrypi.org/downloads/noobs/) 
+1. Boot into the Raspberry Pi
+1. Make sure you've enabled the camera module in the settings
+1. missed-moment requires Python 3.5+ to interface with the camera
 1. Copy the `missed-moment` directory to `/home/pi/`
 1. Then...
 

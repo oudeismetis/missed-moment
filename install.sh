@@ -10,8 +10,8 @@ echo missed-moment install starting...
 cd $APP_HOME
 echo installing libraries...
 sudo apt update
-sudo apt install gpac
-sudo apt install exfat-fuse
+sudo apt -y install gpac
+sudo apt -y install exfat-fuse
 pip3 install -r $APP_HOME/requirements.txt
 
 echo installing $MM_SERVICE...
