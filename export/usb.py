@@ -29,7 +29,7 @@ def _copy_files():
 
 
 def _process_usb(device):
-    device_name = device.device_node # gets name e.g. /dev/sda1
+    device_name = device.device_node  # gets name e.g. /dev/sda1
     # TODO - simple security?
     # if device.get('ID_FS_LABEL', '').lower() == 'missed':
     try:
