@@ -19,27 +19,26 @@ MEDIA_DIR = '/missed_moment_media'
 
 
 def capture_video():
-    file_name = 'missed-moment-{}'.format(
-        datetime.now().strftime('%Y-%m-%d-%H-%M'))
+    file_name = f'missed-moment-{datetime.now().strftime("%Y-%m-%d-%H-%M")}'
 
     # Grab 5 more seconds of video
     camera.wait_recording(5)
 
     # Write current stream to file
-    raw_file = '{}/{}.h264'.format(MEDIA_DIR, file_name)
+    raw_file = f'{MEDIA_DIR}/{file_name}.h264'
     stream.copy_to(raw_file)
 
     # Convert to .mp4
-    clean_file = '{}/{}.mp4'.format(MEDIA_DIR, file_name)
-    mp4box_cmd = 'MP4Box -fps 30 -add {} {}'.format(raw_file, clean_file)
+    clean_file = f'{MEDIA_DIR}/{file_name}.mp4'
+    mp4box_cmd = f'MP4Box -fps 30 -add {raw_file} {clean_file}'
     try:
         subprocess.run(mp4box_cmd, shell=True, check=True)
         # TODO slack(clean_file, file_name)
         # upload_to_dropbox(clean_file)
     except subprocess.CalledProcessError as e:
-        logging.error('Error while running MP4Box - {}'.format(e))
+        logging.error(f'Error while running MP4Box - {e}')
     except Exception as e:
-        logging.error('Unhandled exception uploading files - {}'.format(e))
+        logging.error(f'Unhandled exception uploading files - {e}')
 
 
 def main():

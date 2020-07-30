@@ -15,15 +15,15 @@ def _copy_files():
     print('==============')
     print('Writing files to attached USB device')
     for filename in listdir(MEDIA_DIR):
-        full_path = '{}/{}'.format(MEDIA_DIR, filename)
-        dest = '{}/{}'.format(USB_DIR, filename)
+        full_path = f'{MEDIA_DIR}/{filename}'
+        dest = f'{USB_DIR}/{filename}'
         if video_pattern.fullmatch(filename) and isfile(full_path):
-            print('Moving {} to {}'.format(full_path, dest))
+            print(f'Moving {full_path} to {dest}')
             # TODO test via su to the user running the process
             try:
                 check_call(['sudo', 'cp', full_path, dest])
             except CalledProcessError as e:
-                print('Error while copying file {}'.format(e))
+                print(f'Error while copying file {e}')
             # TODO if is_old > delete
     print('Done copying files')
 
@@ -42,13 +42,13 @@ def _process_usb(device):
         if not exists(USB_DIR):
             check_call(['sudo', 'mkdir', expanduser(USB_DIR)])
     except CalledProcessError as e:
-        print('error: {}'.format(e))
+        print(f'error: {e}')
     else:
         _copy_files()
     finally:
         check_call(['sudo', 'umount', USB_MOUNT_DIR], timeout=60)
         check_call(['sudo', 'eject', device_name], timeout=60)
-        print('USB {} ejected'.format(device_name))
+        print(f'USB {device_name} ejected')
 
 
 def main():
