@@ -8,7 +8,8 @@ As of 07/28/2020 with Raspberry Pi OS, this project is in the "working prototype
 
 ## TODO
 
-1. run headless instructions
+1. apt-pinning?
+1. run headless instructions (would need to install pip to a minimum)
 1. figure out filetype issues, converting, etc.
 1. Video playback speed?
 1. audio?
