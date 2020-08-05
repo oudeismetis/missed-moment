@@ -22,6 +22,7 @@ sudo apt -y install jackd2
 # modify /etc/security/limits.d/audio.conf to bring realtime priorities to the audio group (which is usually fine for a single user desktop usage)
 sudo mv /etc/security/limits.d/audio.conf.disabled /etc/security/limits.d/audio.conf
 # audio capture
+sudo apt -y install liblo-tools # TODO JUDY
 sudo apt -y install jack-capture
 
 pip3 install -r $APP_HOME/requirements.txt
