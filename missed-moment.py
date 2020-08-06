@@ -1,7 +1,7 @@
 from datetime import datetime
 import logging
 from os.path import exists, expanduser
-from os import popen, kill, system
+from os import kill, system, popen
 from signal import SIGTERM, SIGKILL
 import subprocess
 from subprocess import check_call
@@ -41,9 +41,9 @@ def capture_video():
         # TODO slack(clean_file, file_name)
         # upload_to_dropbox(clean_file)
     except subprocess.CalledProcessError as e:
-        logging.error(f'Error while running MP4Box - {e}')
+        print(f'Error while running MP4Box - {e}')
     except Exception as e:
-        logging.error(f'Unhandled exception uploading files - {e}')
+        print(f'Unhandled exception uploading files - {e}')
 
 
 def get_capture_device_id():
@@ -97,7 +97,8 @@ def start_audio_capture_ringbuffer():
 
     
 def main():
-    logging.basicConfig(level=logging.INFO)
+    print('start')
+    #logging.basicConfig(level=logging.INFO)
 
     # TODO JUDY create service file for jackd?  Or just start jackd when missed-moment starts via python
     # so we can start it with the correct deviceId
@@ -126,26 +127,30 @@ def main():
     device_id = get_capture_device_id()
     if not device_id:
         print('No audio capture device detected')
+    print(device_id)
 
     # start audio server
+    print('start audio server')
     start_audio_server(device_id)
 
     # start audio capture buffer
+    print('start audio capture ringbuffer')
     start_audio_capture_ringbuffer()
     
     
-
-
     # video
-    # camera.start_recording(stream, format='h264')
-    # logging.info('missed-moment ready to save a moment!')
+    print('start video')
+    camera.start_recording(stream, format='h264')
+    print('missed-moment ready to save a moment!')
 
-    # button.when_pressed = capture_video
-    # try:
-    #     while True:
-    #         camera.wait_recording(1)
-    # finally:
-    #     camera.stop_recording()
+    button.when_pressed = capture_video
+    try:
+        while True:
+            camera.wait_recording(1)
+    finally:
+        camera.stop_recording()
+        # release the camera resources (failure to do this leads to GPU memory leaks)
+        camera.close()
 
 
 if __name__ == '__main__':
