@@ -110,6 +110,8 @@ def capture_video_audio(camera, stream):
 
     # restart audio capture for next moment
     start_audio_capture_ringbuffer()
+    # resets video stream to empty.
+    stream.clear()
 
 
 def get_capture_device_id():
