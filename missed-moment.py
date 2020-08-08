@@ -5,6 +5,7 @@ from os import kill, system, popen
 from signal import SIGTERM, SIGKILL
 import subprocess
 from subprocess import check_call
+from shutil import move
 
 from gpiozero import Button
 import picamera
@@ -14,6 +15,7 @@ import picamera
 MEDIA_DIR = '/missed_moment_media'
 TIME_TO_RECORD = 30  # in seconds
 AUDIO_CAPTURE_REMOTE_PORT = 7777
+AUDIO_CAPTURE_TEMP_FILENAME = f'{MEDIA_DIR}/missed-moment-timemachine.wav'
 
 button = Button(26)
 camera = picamera.PiCamera()
@@ -23,9 +25,17 @@ camera.resolution = (1280, 720)
 stream = picamera.PiCameraCircularIO(camera, seconds=TIME_TO_RECORD)
 
 
-def capture_video():
+def capture_video_audio():
     file_name = f'missed-moment-{datetime.now().strftime("%Y-%m-%d-%H-%M")}'
+    # TODO need both of these to happen in parallel
+    capture_video(file_name)
+    capture_audio(file_name)
+    # merge video and audio
+    merge_video_audio(file_name)
 
+
+
+def capture_video(file_name):
     # Grab 5 more seconds of video
     camera.wait_recording(5)
 
@@ -44,6 +54,61 @@ def capture_video():
         print(f'Error while running MP4Box - {e}')
     except Exception as e:
         print(f'Unhandled exception uploading files - {e}')
+
+
+def capture_audio(file_name):
+    # Write current stream to file
+    clean_file = f'{MEDIA_DIR}/{file_name}.wav'
+    print(f'audio_clean_file:{clean_file}')
+
+    # timemachine start and jack_capture stop to get the audio ring buff stream
+    # don't think I can use subprocess.call to wait because this is a oscsend command
+    command = f"oscsend localhost {AUDIO_CAPTURE_REMOTE_PORT} /jack_capture/tm/start"
+    system(command)
+    # get size of the default time machine file, and as soon as it is bigger we know 
+    # time machine has started recording to file
+    default_file_size = popen(f"ls -la {AUDIO_CAPTURE_TEMP_FILENAME} | awk '{{print $5}}'")
+    default_file_size_string = default_file_size.read()
+    print(f'initial {AUDIO_CAPTURE_TEMP_FILENAME} size:{default_file_size_string}')
+    file_saved = False
+    while not file_saved:
+        curr_file_size = popen(f"ls -la {AUDIO_CAPTURE_TEMP_FILENAME} | awk '{{print $5}}'")
+        curr_file_size_string = curr_file_size.read()
+        print(f'curr {AUDIO_CAPTURE_TEMP_FILENAME} size:{curr_file_size_string}')
+        if (int(curr_file_size_string) > int(default_file_size_string)):
+            print('file saved!!!')
+            file_saved = True
+
+    command = f"oscsend localhost {AUDIO_CAPTURE_REMOTE_PORT} /jack_capture/stop"
+    system(command)
+    
+    # wait until jack_capture process is stopped
+    capture_still_running = True
+    while capture_still_running:
+        audio_server_pid = popen("ps -ef | grep [j]ack_capture | awk '{print $2}'")
+        audio_server_pid_string = audio_server_pid.read()
+        print(f'audio_server_pid_string:{audio_server_pid_string}')
+        if audio_server_pid_string == "":
+            print('capture stopped running')
+            capture_still_running = False
+
+    # rename capture file
+    print(f'moving {AUDIO_CAPTURE_TEMP_FILENAME} to {clean_file}')
+    move(AUDIO_CAPTURE_TEMP_FILENAME, clean_file)
+
+    # restart start_audio_capture_ringbuffer
+    # HERE need to wait for mv ot finish?
+    start_audio_capture_ringbuffer()
+
+
+def merge_video_audio(file_name):
+    # Write current stream to file
+    clean_file = f'{MEDIA_DIR}/{file_name}-merged.mp4'
+    print(f'merged_clean_file:{clean_file}')
+
+    # merge video and audio file, length being shorter of the two
+    command = f"ffmpeg -i {MEDIA_DIR}/{file_name}.mp4 -i {MEDIA_DIR}/{file_name}.wav -c:v copy -c:a aac -shortest {clean_file}"
+    system(command)
 
 
 def get_capture_device_id():
@@ -89,9 +154,7 @@ def start_audio_capture_ringbuffer():
     
     # jack_capture called with -O <udp-port-number>can be remote-controlled via OSC (Open Sound Control) messages"
     # jack_capture doesn't like to be spawned as a background process (&)
-    # TODO JUDY filename
-    filename = "timemachine.wav"
-    command = f"jack_capture -O {str(AUDIO_CAPTURE_REMOTE_PORT)} --port '*' --timemachine --timemachine-prebuffer {str(TIME_TO_RECORD)} --filename-prefix missed-moment- {filename}"
+    command = f"jack_capture -O {str(AUDIO_CAPTURE_REMOTE_PORT)} --daemon --port '*' --timemachine --timemachine-prebuffer {str(TIME_TO_RECORD)} {AUDIO_CAPTURE_TEMP_FILENAME} &"
     print(command)
     system(command)
 
@@ -110,7 +173,9 @@ def main():
     # TODO JUDY audio capture
     #   command: ps -ef | grep [j]ack_capture
     # jack_capture called with -O <udp-port-number>can be remote-controlled via OSC (Open Sound Control) messages"
-    # command: jack_capture -O 7777 --port '*' --timemachine --timemachine-prebuffer TIME_TO_RECORD --filename-prefix missed-moment- timemachine.wav
+    # command: jack_capture -O 7777 --port '*' --daemon --timemachine --timemachine-prebuffer TIME_TO_RECORD timemachine.wav &
+    # try --hide-buffer-usage and 
+    # try --daemon and --absolutely-silent
     # TODO JUDY check udp port 7777 is not in use
     #   command: sudo netstat | grep 7777
     #   command: oscsend localhost 7777 /jack_capture/tm/start
@@ -122,6 +187,11 @@ def main():
         check_call(['sudo', 'mkdir', expanduser(MEDIA_DIR)])
         # add write permissions for all
         check_call(['sudo', 'chmod', 'a+w', expanduser(MEDIA_DIR)])
+   
+    # video
+    print('start video')
+    camera.start_recording(stream, format='h264')
+    print('missed-moment ready to save a moment!')
 
     # get the audio capture device_id
     device_id = get_capture_device_id()
@@ -130,24 +200,18 @@ def main():
     print(device_id)
 
     # start audio server
-    print('start audio server')
-    start_audio_server(device_id)
+    start_audio_server(device_id)  
 
     # start audio capture buffer
-    print('start audio capture ringbuffer')
     start_audio_capture_ringbuffer()
-    
-    
-    # video
-    print('start video')
-    camera.start_recording(stream, format='h264')
-    print('missed-moment ready to save a moment!')
 
-    button.when_pressed = capture_video
+    print('press the button!!!')
+    button.when_pressed = capture_video_audio
     try:
         while True:
             camera.wait_recording(1)
     finally:
+        print('closing camera and audio server')
         camera.stop_recording()
         # release the camera resources (failure to do this leads to GPU memory leaks)
         camera.close()
