@@ -14,22 +14,12 @@ import picamera
 # TODO from export.slack import slack
 
 MEDIA_DIR = '/missed_moment_media'
-TIME_TO_RECORD = 30  # in seconds
+TIME_TO_RECORD = 15  # in seconds
 AUDIO_CAPTURE_REMOTE_PORT = 7777
 AUDIO_CAPTURE_TEMP_FILENAME = f'{MEDIA_DIR}/missed-moment-timemachine.wav'
 
-button = Button(26)
-camera = picamera.PiCamera()
-camera.resolution = (1280, 720)
-# Keep a buffer of 30sec. (Actually ends up being ~60 for reasons)
-# https://picamera.readthedocs.io/en/release-1.11/faq.html#why-are-there-more-than-20-seconds-of-video-in-the-circular-buffer
-stream = picamera.PiCameraCircularIO(camera, seconds=TIME_TO_RECORD)
 
-
-def capture_video(file_name):
-    # Grab 5 more seconds of video
-    camera.wait_recording(5)
-
+def capture_video(camera, stream, file_name):
     # Write current stream to file
     raw_file = f'{MEDIA_DIR}/{file_name}.h264'
     stream.copy_to(raw_file, seconds=TIME_TO_RECORD) # copy specific number of seconds from stream
@@ -105,13 +95,10 @@ def merge_video_audio(file_name):
         print(f'Unhandled exception merge - {e}')
 
 
-def capture_video_audio():
-    file_name = f'missed-moment-{datetime.now().strftime("%Y-%m-%d-%H-%M")}'
-    # # TODO need both of these to happen in parallel
-    # capture_video(file_name)
-    # capture_audio(file_name)
-
-    p1 = Process(target=capture_video, args=(file_name,))
+def capture_video_audio(camera, stream):
+    file_name = f'missed-moment-{datetime.now().strftime("%Y-%m-%d-%H-%M-%S")}'
+    # both of these to happen in parallel
+    p1 = Process(target=capture_video, args=(camera, stream, file_name,))
     p1.start()
     p2 = Process(target=capture_audio, args=(file_name,))
     p2.start()
@@ -174,61 +161,68 @@ def start_audio_capture_ringbuffer():
 
     
 def main():
-    print('start')
-    #logging.basicConfig(level=logging.INFO)
+    # upon exiting the with statement, the camera.close() method is automatically called
+    with picamera.PiCamera() as camera:
+        print('start')
+        #logging.basicConfig(level=logging.INFO)
 
-    # TODO JUDY create service file for jackd?  Or just start jackd when missed-moment starts via python
-    # so we can start it with the correct deviceId
-    # TODO JUDY start jackd and get the processId so can kill later
-    #   command: ps -ef | grep [j]ackd
-    #   command:  jackd -P70 -p16 -t2000 -dalsa -dhw:1,0 -p128 -n3 -r44100 -s
-    # TODO JUDY what exactly are other params?
+        # TODO JUDY create service file for jackd?  Or just start jackd when missed-moment starts via python
+        # so we can start it with the correct deviceId
+        # TODO JUDY start jackd and get the processId so can kill later
+        #   command: ps -ef | grep [j]ackd
+        #   command:  jackd -P70 -p16 -t2000 -dalsa -dhw:1,0 -p128 -n3 -r44100 -s
+        # TODO JUDY what exactly are other params?
 
-    # TODO JUDY audio capture
-    #   command: ps -ef | grep [j]ack_capture
-    # jack_capture called with -O <udp-port-number>can be remote-controlled via OSC (Open Sound Control) messages"
-    # command: jack_capture -O 7777 --port '*' --daemon --timemachine --timemachine-prebuffer TIME_TO_RECORD timemachine.wav &
-    # try --hide-buffer-usage and 
-    # try --daemon and --absolutely-silent
-    # TODO JUDY check udp port 7777 is not in use
-    #   command: sudo netstat | grep 7777
-    #   command: oscsend localhost 7777 /jack_capture/tm/start
-    #   command: oscsend localhost 7777 /jack_capture/stop
-    # TODO JUDY merge video and audio
-    #   command: ffmpeg -i missed-moment-2020-07-28-15-19.mp4 -i test.wav -c:v copy -c:a aac -shortest output.mp4
+        # TODO JUDY audio capture
+        #   command: ps -ef | grep [j]ack_capture
+        # jack_capture called with -O <udp-port-number>can be remote-controlled via OSC (Open Sound Control) messages"
+        # command: jack_capture -O 7777 --port '*' --daemon --timemachine --timemachine-prebuffer TIME_TO_RECORD timemachine.wav &
+        # try --hide-buffer-usage and 
+        # try --daemon and --absolutely-silent
+        # TODO JUDY check udp port 7777 is not in use
+        #   command: sudo netstat | grep 7777
+        #   command: oscsend localhost 7777 /jack_capture/tm/start
+        #   command: oscsend localhost 7777 /jack_capture/stop
+        # TODO JUDY merge video and audio
+        #   command: ffmpeg -i missed-moment-2020-07-28-15-19.mp4 -i test.wav -c:v copy -c:a aac -shortest output.mp4
 
-    if not exists(MEDIA_DIR):
-        check_call(['sudo', 'mkdir', expanduser(MEDIA_DIR)])
-        # add write permissions for all
-        check_call(['sudo', 'chmod', 'a+w', expanduser(MEDIA_DIR)])
-   
-    # video
-    print('start video')
-    camera.start_recording(stream, format='h264')
-    print('missed-moment ready to save a moment!')
 
-    # get the audio capture device_id
-    device_id = get_capture_device_id()
-    if not device_id:
-        print('No audio capture device detected')
-    print(device_id)
+        button = Button(26)
+        camera.resolution = (1280, 720)
+        # Keep a buffer of 30sec. (Actually ends up being ~60 for reasons)
+        # https://picamera.readthedocs.io/en/release-1.11/faq.html#why-are-there-more-than-20-seconds-of-video-in-the-circular-buffer
+        stream = picamera.PiCameraCircularIO(camera, seconds=TIME_TO_RECORD)
 
-    # start audio server
-    start_audio_server(device_id)  
+        if not exists(MEDIA_DIR):
+            check_call(['sudo', 'mkdir', expanduser(MEDIA_DIR)])
+            # add write permissions for all
+            check_call(['sudo', 'chmod', 'a+w', expanduser(MEDIA_DIR)])
+    
+        # video
+        print('start video')
+        camera.start_recording(stream, format='h264')
 
-    # start audio capture buffer
-    start_audio_capture_ringbuffer()
+        # get the audio capture device_id
+        device_id = get_capture_device_id()
+        if not device_id:
+            print('No audio capture device detected')
+        print(device_id)
 
-    print('press the button!!!')
-    button.when_pressed = capture_video_audio
-    try:
-        while True:
-            camera.wait_recording(1)
-    finally:
-        print('closing camera and audio server')
-        camera.stop_recording()
-        # release the camera resources (failure to do this leads to GPU memory leaks)
-        camera.close()
+        # start audio server
+        start_audio_server(device_id)  
+
+        # start audio capture buffer
+        start_audio_capture_ringbuffer()
+
+        print('missed-moment ready to save a moment!')
+        # pass a lambda function into 'when_pressed' which contains variables the function can access
+        button.when_pressed = lambda : capture_video_audio(camera, stream)
+        try:
+            while True:
+                camera.wait_recording(1)
+        finally:
+            print('closing camera and audio server')
+            camera.stop_recording()
 
 
 if __name__ == '__main__':
