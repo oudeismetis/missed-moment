@@ -6,6 +6,7 @@ from signal import SIGTERM, SIGKILL
 import subprocess
 from subprocess import check_call
 from shutil import move
+from multiprocessing import Process
 
 from gpiozero import Button
 import picamera
@@ -23,16 +24,6 @@ camera.resolution = (1280, 720)
 # Keep a buffer of 30sec. (Actually ends up being ~60 for reasons)
 # https://picamera.readthedocs.io/en/release-1.11/faq.html#why-are-there-more-than-20-seconds-of-video-in-the-circular-buffer
 stream = picamera.PiCameraCircularIO(camera, seconds=TIME_TO_RECORD)
-
-
-def capture_video_audio():
-    file_name = f'missed-moment-{datetime.now().strftime("%Y-%m-%d-%H-%M")}'
-    # TODO need both of these to happen in parallel
-    capture_video(file_name)
-    capture_audio(file_name)
-    # merge video and audio
-    merge_video_audio(file_name)
-
 
 
 def capture_video(file_name):
@@ -96,10 +87,6 @@ def capture_audio(file_name):
     print(f'moving {AUDIO_CAPTURE_TEMP_FILENAME} to {clean_file}')
     move(AUDIO_CAPTURE_TEMP_FILENAME, clean_file)
 
-    # restart start_audio_capture_ringbuffer
-    # HERE need to wait for mv ot finish?
-    start_audio_capture_ringbuffer()
-
 
 def merge_video_audio(file_name):
     # Write current stream to file
@@ -108,7 +95,34 @@ def merge_video_audio(file_name):
 
     # merge video and audio file, length being shorter of the two
     command = f"ffmpeg -i {MEDIA_DIR}/{file_name}.mp4 -i {MEDIA_DIR}/{file_name}.wav -c:v copy -c:a aac -shortest {clean_file}"
-    system(command)
+    # TODO JUDY system(command)
+
+    try:
+        subprocess.run(command, shell=True, check=True)
+    except subprocess.CalledProcessError as e:
+        print(f'Error while running merge - {e}')
+    except Exception as e:
+        print(f'Unhandled exception merge - {e}')
+
+
+def capture_video_audio():
+    file_name = f'missed-moment-{datetime.now().strftime("%Y-%m-%d-%H-%M")}'
+    # # TODO need both of these to happen in parallel
+    # capture_video(file_name)
+    # capture_audio(file_name)
+
+    p1 = Process(target=capture_video, args=(file_name,))
+    p1.start()
+    p2 = Process(target=capture_audio, args=(file_name,))
+    p2.start()
+    p1.join()
+    p2.join()
+
+    # merge video and audio
+    merge_video_audio(file_name)
+
+    # restart audio capture for next moment
+    start_audio_capture_ringbuffer()
 
 
 def get_capture_device_id():
