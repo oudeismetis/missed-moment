@@ -124,7 +124,6 @@ def get_capture_device_id():
             device_id = "hw:" + line[line.find("card")+5] + "," + line[line.find("device")+7]
     return device_id
     
-
 def start_audio_server(device_id):
     print("Starting audio server")
     audio_server_pid = popen("ps -ef | grep [j]ackd | awk '{print $2}'")
@@ -134,10 +133,19 @@ def start_audio_server(device_id):
         if line:
             print(f'!!!!!!kill jackd {line}')
             kill(int(line), SIGTERM)
-    # TODO document what the parameters mean
+    # jackd parameters:
+    # --no-mlock: doesn't work
+    # -p: port max
+    # -t: timeout in milliseconds
+    # -d: driver backend
+    #   -dalsa -C provide only capture ports
+    #   -p: period - This value must be a power of 2, and the default is 1024
+    #   -n: number of periods of playback latency
+    #   -r: sample rate, default is 48000
+    #   -s: softmode - this makes jack less likely to disconnect unresponsive ports
+    #       when running without --realtime
     command = f"jackd -P70 -p16 -t2000 -dalsa -d{device_id} -p128 -n3 -r44100 -s &"
     system(command)
-
 
 def start_audio_capture_ringbuffer():
     print("Starting audio capture buffer")
@@ -173,7 +181,6 @@ def main():
         # TODO JUDY start jackd and get the processId so can kill later
         #   command: ps -ef | grep [j]ackd
         #   command:  jackd -P70 -p16 -t2000 -dalsa -dhw:1,0 -p128 -n3 -r44100 -s
-        # TODO JUDY what exactly are other params?
 
         # TODO JUDY audio capture
         #   command: ps -ef | grep [j]ack_capture
@@ -211,9 +218,10 @@ def main():
         print(device_id)
 
         # start audio server
-        start_audio_server(device_id)  
+        start_audio_server(device_id) 
 
         # start audio capture buffer
+        # HERE TESTING:  jackd can start now, but get memory error when starting audio capture ring buffer
         start_audio_capture_ringbuffer()
 
         print('missed-moment ready to save a moment!')

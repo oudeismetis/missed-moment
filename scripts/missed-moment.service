@@ -1,9 +1,18 @@
 [Unit]
 Description=missed-moment service
-Wants=missed-moment-audio-server.service
-After=network.target missed-moment-audio-server.service
+# TODO JUDY remove next two lines if jackd is not run via its own service
+# Wants=missed-moment-audio-server.service
+# After=network.target missed-moment-audio-server.service
+After=network.target
 
+# The four settings under Service is for jackd support
+# LimitRTPRIO and LimitMEMLOCK must be set in systemd service file, because when run as a service
+# etc security limits.d audio.conf is not honored.  MEMLOCK unlimited is infinity in systemd
 [Service]
+LimitRTPRIO=95
+LimitMEMLOCK=infinity
+Environment="DISPLAY=:0"
+Environment="JACK_NO_AUDIO_RESERVATION=1"
 ExecStart=/usr/bin/python3 -u missed-moment.py
 WorkingDirectory=/home/pi/missed-moment
 StandardOutput=inherit

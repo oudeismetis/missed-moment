@@ -28,11 +28,7 @@ sudo apt -y install jack-capture
 
 pip3 install -r $APP_HOME/requirements.txt
 
-# TODO
-# jackd works command line but not as a systemd service file
-# added environment variables to service file
-# updated /boot/config.txt gpu_mem from 128 -> 256, still have the error of Cannot lock down 13589280 byte memory area (Cannot allocate memory)
-# apart of "try", commenting out for now
+# TODO JUDY
 # echo installing $MM_AUDIO_SERVER_SERVICE...
 # sudo cp $APP_HOME/scripts/$MM_AUDIO_SERVER_SERVICE $SYSTEMD_HOME
 # sudo chmod 644 $SYSTEMD_HOME/$MM_AUDIO_SERVER_SERVICE
@@ -54,4 +50,4 @@ sudo systemctl enable $MM_USB_SERVICE
 sudo systemctl daemon-reload
 
 echo missed-moment install complete.
-echo Logout and login again for the audio server to have configuration recognized - no need to reboot/restart
+echo IMPORTANT! Logout and login again for the audio server to have configuration recognized - no need to reboot/restart !IMPORTANT

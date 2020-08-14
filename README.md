@@ -110,7 +110,7 @@ As of 07/28/2020 with Raspberry Pi OS, this project is in the "working prototype
     - While ssh'd onto the raspberry pi - logs should print to the screen
 
 1.  Production Installation
-    - While ssh'd onto the raspberry pi, to view missed-moment/missed-moment-usb status and logs (if you want to tail the logs add "-f" option to journalctl)
+    - While ssh'd onto the raspberry pi, to view missed-moment/missed-moment-usb status and logs (if you want to tail the logs add "-f" option right after journalctl and before -u option)
 
     ```
         sudo systemctl status missed-moment
