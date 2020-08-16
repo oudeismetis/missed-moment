@@ -28,13 +28,6 @@ sudo apt -y install jack-capture
 
 pip3 install -r $APP_HOME/requirements.txt
 
-# TODO JUDY
-# echo installing $MM_AUDIO_SERVER_SERVICE...
-# sudo cp $APP_HOME/scripts/$MM_AUDIO_SERVER_SERVICE $SYSTEMD_HOME
-# sudo chmod 644 $SYSTEMD_HOME/$MM_AUDIO_SERVER_SERVICE
-# sudo systemctl start $MM_AUDIO_SERVER_SERVICE
-# sudo systemctl enable $MM_AUDIO_SERVER_SERVICE
-
 echo installing $MM_SERVICE...
 sudo cp $APP_HOME/scripts/$MM_SERVICE $SYSTEMD_HOME
 sudo chmod 644 $SYSTEMD_HOME/$MM_SERVICE

@@ -2,30 +2,31 @@ from os import listdir
 from os.path import exists, expanduser, isfile
 import re
 from subprocess import CalledProcessError, check_call
+import logging
 
 from pyudev import Context, Monitor
 
-video_pattern = re.compile('missed-moment.*mp4')
+video_pattern = re.compile('missed-moment.*merged.*mp4')
 MEDIA_DIR = '/missed_moment_media'
 USB_MOUNT_DIR = '/missed_moment_usb'
 USB_DIR = USB_MOUNT_DIR + '/missed_moment'
 
 
 def _copy_files():
-    print('==============')
-    print('Writing files to attached USB device')
+    logging.info('==============')
+    logging.info('Writing files to attached USB device')
     for filename in listdir(MEDIA_DIR):
         full_path = f'{MEDIA_DIR}/{filename}'
         dest = f'{USB_DIR}/{filename}'
         if video_pattern.fullmatch(filename) and isfile(full_path):
-            print(f'Moving {full_path} to {dest}')
+            logging.info(f'Moving {full_path} to {dest}')
             # TODO test via su to the user running the process
             try:
                 check_call(['sudo', 'cp', full_path, dest])
             except CalledProcessError as e:
-                print(f'Error while copying file {e}')
+                logging.error(f'Error while copying file {e}')
             # TODO if is_old > delete
-    print('Done copying files')
+    logging.info('Done copying files')
 
 
 def _process_usb(device):
@@ -42,16 +43,19 @@ def _process_usb(device):
         if not exists(USB_DIR):
             check_call(['sudo', 'mkdir', expanduser(USB_DIR)])
     except CalledProcessError as e:
-        print(f'error: {e}')
+        logging.error(f'error: {e}')
     else:
         _copy_files()
     finally:
         check_call(['sudo', 'umount', USB_MOUNT_DIR], timeout=60)
         check_call(['sudo', 'eject', device_name], timeout=60)
-        print(f'USB {device_name} ejected')
+        logging.info(f'USB {device_name} ejected')
 
 
 def main():
+    logging.basicConfig(level=logging.INFO)
+    logging.info('starting missed-moment-usb')
+    
     context = Context()
     monitor = Monitor.from_netlink(context)
     monitor.filter_by(subsystem='block', device_type='partition')
@@ -60,6 +64,7 @@ def main():
     for device in iter(monitor.poll, None):
         if device.action == 'add':
             _process_usb(device)
+    logging.info('missed-moment-usb ready')
 
 
 if __name__ == '__main__':

@@ -1,8 +1,5 @@
 [Unit]
 Description=missed-moment service
-# TODO JUDY remove next two lines if jackd is not run via its own service
-# Wants=missed-moment-audio-server.service
-# After=network.target missed-moment-audio-server.service
 After=network.target
 
 # The four settings under Service is for jackd support
