@@ -1,10 +1,10 @@
 from datetime import datetime
 import logging
 from os.path import exists, expanduser
-from os import kill, system, popen
+from os import kill, system
 from signal import SIGTERM, SIGKILL
 import subprocess
-from subprocess import check_call
+from subprocess import check_call, Popen
 from shutil import move
 from multiprocessing import Process
 
@@ -42,20 +42,22 @@ def capture_audio(file_name):
     clean_file = f'{MEDIA_DIR}/{file_name}.wav'
     logging.debug(f'audio_clean_file:{clean_file}')
 
+    # get size of the default time machine file, and as soon as it is bigger we know 
+    # time machine has started recording to file
+    result = Popen(f"ls -la {AUDIO_CAPTURE_TEMP_FILENAME} | awk '{{print $5}}'", shell=True, stdout=subprocess.PIPE)
+    default_file_size_string = result.stdout.read().decode('utf-8')
+    logging.debug(f'initial {AUDIO_CAPTURE_TEMP_FILENAME} size:{default_file_size_string}')
+
     # timemachine start and jack_capture stop to get the audio ring buff stream saved to file
     # don't think I can use subprocess.call to wait because this is a oscsend command
     command = f"oscsend localhost {AUDIO_CAPTURE_REMOTE_PORT} /jack_capture/tm/start"
     system(command)
-    # get size of the default time machine file, and as soon as it is bigger we know 
-    # time machine has started recording to file
-    default_file_size = popen(f"ls -la {AUDIO_CAPTURE_TEMP_FILENAME} | awk '{{print $5}}'")
-    default_file_size_string = default_file_size.read()
-    logging.debug(f'initial {AUDIO_CAPTURE_TEMP_FILENAME} size:{default_file_size_string}')
+
     file_saved = False
     while not file_saved:
-        curr_file_size = popen(f"ls -la {AUDIO_CAPTURE_TEMP_FILENAME} | awk '{{print $5}}'")
-        curr_file_size_string = curr_file_size.read()
-        logging.debug(f'curr {AUDIO_CAPTURE_TEMP_FILENAME} size:{curr_file_size_string}')
+        result = Popen(f"ls -la {AUDIO_CAPTURE_TEMP_FILENAME} | awk '{{print $5}}'", shell=True, stdout=subprocess.PIPE)
+        curr_file_size_string = result.stdout.read().decode('utf-8')
+        logging.debug(f'current {AUDIO_CAPTURE_TEMP_FILENAME} size:{curr_file_size_string}')
         if (int(curr_file_size_string) > int(default_file_size_string)):
             logging.debug(f'{AUDIO_CAPTURE_TEMP_FILENAME} saved')
             file_saved = True
@@ -66,8 +68,8 @@ def capture_audio(file_name):
     # wait until jack_capture process is stopped
     capture_still_running = True
     while capture_still_running:
-        audio_server_pid = popen("ps -ef | grep [j]ack_capture | awk '{print $2}'")
-        audio_server_pid_string = audio_server_pid.read()
+        result = Popen(f"ps -ef | grep [j]ack_capture | awk '{{print $2}}'", shell=True, stdout=subprocess.PIPE)
+        audio_server_pid_string = result.stdout.read().decode('utf-8')
         logging.debug(f'audio_server_pid_string:{audio_server_pid_string}')
         if audio_server_pid_string == "":
             logging.debug('audio capture stopped running')
@@ -114,25 +116,16 @@ def capture_video_audio(camera, stream):
 
 def get_capture_device_id():
     device_id = None
-    devices = popen("arecord -l")
-    device_string = devices.read()
-    device_string = device_string.split("\n")
+    result = subprocess.run(['arecord', '-l'], stdout=subprocess.PIPE)
+    device_string = result.stdout.decode('utf-8').split("\n")
     for line in device_string:
         if(line.find("card") != -1):
             device_id = "hw:" + line[line.find("card")+5] + "," + line[line.find("device")+7]
-    logging.debug(device_id)
+    logging.debug(f'device_id: {device_id}')
     return device_id
 
 
 def start_audio_server(device_id):
-    logging.info("Starting audio server")
-    audio_server_pid = popen("ps -ef | grep [j]ackd | awk '{print $2}'")
-    audio_server_pid_string = audio_server_pid.read()
-    audio_server_pid_string = audio_server_pid_string.split("\n")
-    for line in audio_server_pid_string:
-        if line:
-            logging.debug(f'stopping already running jackd {line}')
-            kill(int(line), SIGTERM)
     # jackd parameters:
     # --no-mlock: doesn't work
     # -p: port max
@@ -144,28 +137,44 @@ def start_audio_server(device_id):
     #   -r: sample rate, default is 48000
     #   -s: softmode - this makes jack less likely to disconnect unresponsive ports
     #       when running without --realtime
+    logging.info("Starting audio server")
+    result = Popen("ps -ef | grep [j]ackd | awk '{print $2}'", shell=True, stdout=subprocess.PIPE)
+    audio_server_pid_string = result.stdout.read().decode('utf-8').split('\n')
+    for line in audio_server_pid_string:
+        if line:
+            logging.debug(f'stopping already running jackd {line}')
+            kill(int(line), SIGTERM)
+    # NOTE:  Want this to be running as just one background process, e.g.
+    # pi@raspberrypi:~/missed-moment $ ps -ef | grep jack
+    # pi       10814     1  3 15:19 ?        00:00:04 jackd -P70 -p16 -t2000 -dalsa -dhw:1,0 -p128 -n3 -r44100 -s
+    # NOT e.g.
+    # pi@raspberrypi:~/missed-moment $ ps -ef | grep jack
+    # pi       11010 10990  0 15:23 ?        00:00:00 /bin/sh -c jackd -P70 -p16 -t2000 -dalsa -dhw:1,0 -p128 -n3 -r44100 -s
+    # pi       11011 11010  5 15:23 ?        00:00:00 jackd -P70 -p16 -t2000 -dalsa -dhw:1,0 -p128 -n3 -r44100 -s
     command = f"jackd -P70 -p16 -t2000 -dalsa -d{device_id} -p128 -n3 -r44100 -s &"
     system(command)
 
 
 def start_audio_capture_ringbuffer():
     logging.info("Starting audio capture buffer")
-    audio_capture_pid = popen("ps -ef | grep [j]ack_capture | awk '{print $2}'")
-    audio_capture_pid_string = audio_capture_pid.read()
-    audio_capture_pid_string = audio_capture_pid_string.split("\n")
+    result = Popen("ps -ef | grep [j]ack_capture | awk '{print $2}'", shell=True, stdout=subprocess.PIPE)
+    audio_capture_pid_string = result.stdout.read().decode('utf-8').split('\n')
     for line in audio_capture_pid_string:
         if line:
             logging.debug(f'stopping already running jack_capture {line}')
             kill(int(line), SIGKILL)
 
     # check UDP port available, TODO make more robust
-    remote_port = popen("sudo netstat | grep {}".format(str(AUDIO_CAPTURE_REMOTE_PORT)))
-    remote_port_string = remote_port.read()
+    result = Popen(f"sudo netstat | grep {str(AUDIO_CAPTURE_REMOTE_PORT)}", shell=True, stdout=subprocess.PIPE)
+    remote_port_string = result.stdout.read().decode('utf-8')
+    logging.debug(f'remote_port_string: {remote_port_string}')
     if remote_port_string:
         logging.error('Audio capture remote port not available')
     
-    # jack_capture called with -O <udp-port-number>can be remote-controlled via OSC (Open Sound Control) messages"
-    # jack_capture doesn't like to be spawned as a background process (&)
+    # jack_capture called with:
+    #  -O <udp-port-number>: can be remote-controlled via OSC (Open Sound Control) messages"
+    #  --timemachine: run in ringbuffer mode
+    #  --timemachine-prebuffer: how much time to keep inr ingbuffer in seconds
     command = f"jack_capture -O {str(AUDIO_CAPTURE_REMOTE_PORT)} --daemon --port '*' --timemachine --timemachine-prebuffer {str(TIME_TO_RECORD)} {AUDIO_CAPTURE_TEMP_FILENAME} &"
     logging.debug(command)
     system(command)
@@ -174,7 +183,7 @@ def start_audio_capture_ringbuffer():
 def main():
     # upon exiting the with statement, the camera.close() method is automatically called
     with picamera.PiCamera() as camera:
-        logging.basicConfig(level=logging.INFO)
+        logging.basicConfig(level=logging.DEBUG)
         logging.info('starting missed-moment')
 
         button = Button(26)
