@@ -200,7 +200,6 @@ def main():
         start_audio_server(device_id) 
 
         # start audio capture buffer
-        # HERE TESTING:  jackd can start now, but get memory error when starting audio capture ring buffer
         start_audio_capture_ringbuffer()
 
         logging.info('missed-moment ready to save a moment!')
