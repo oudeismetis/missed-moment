@@ -2,7 +2,6 @@
 
 APP_HOME=/home/pi/missed-moment
 SYSTEMD_HOME=/etc/systemd/system
-MM_AUDIO_SERVER_SERVICE=missed-moment-audio-server.service
 MM_SERVICE=missed-moment.service
 MM_USB_SERVICE=missed-moment-usb.service
 
