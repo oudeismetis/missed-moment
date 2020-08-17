@@ -16,7 +16,7 @@ import picamera
 MEDIA_DIR = '/missed_moment_media'
 TIME_TO_RECORD = 15  # in seconds
 AUDIO_CAPTURE_REMOTE_PORT = 7777
-AUDIO_CAPTURE_TEMP_FILENAME = f'{MEDIA_DIR}/missed-moment-timemachine.wav'
+AUDIO_CAPTURE_TEMP_FILENAME = f'{MEDIA_DIR}/mm-timemachine.wav'
 
 
 def capture_video(camera, stream, file_name):

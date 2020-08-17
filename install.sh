@@ -4,6 +4,7 @@ APP_HOME=/home/pi/missed-moment
 SYSTEMD_HOME=/etc/systemd/system
 MM_SERVICE=missed-moment.service
 MM_USB_SERVICE=missed-moment-usb.service
+USER=pi
 
 echo missed-moment install starting...
 
@@ -40,6 +41,10 @@ sudo systemctl start $MM_USB_SERVICE
 sudo systemctl enable $MM_USB_SERVICE
 
 sudo systemctl daemon-reload
+
+# install crontab
+chmod a+x $APP_HOME/scripts/missed-moment-delete-files.sh
+crontab -u $USER $APP_HOME/scripts/crontab-missed-moment
 
 echo missed-moment install complete.
 echo IMPORTANT! Logout and login again for the audio server to have configuration recognized - no need to reboot/restart !IMPORTANT
