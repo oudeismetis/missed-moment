@@ -14,7 +14,7 @@ import picamera
 # TODO from export.slack import slack
 
 MEDIA_DIR = '/missed_moment_media'
-TIME_TO_RECORD = 15  # in seconds
+TIME_TO_RECORD = 30  # in seconds
 AUDIO_CAPTURE_REMOTE_PORT = 7777
 AUDIO_CAPTURE_TEMP_FILENAME = f'{MEDIA_DIR}/mm-timemachine.wav'
 
@@ -58,7 +58,7 @@ def capture_audio(file_name):
         result = Popen(f"ls -la {AUDIO_CAPTURE_TEMP_FILENAME} | awk '{{print $5}}'", shell=True, stdout=subprocess.PIPE)
         curr_file_size_string = result.stdout.read().decode('utf-8')
         logging.debug(f'current {AUDIO_CAPTURE_TEMP_FILENAME} size:{curr_file_size_string}')
-        if (int(curr_file_size_string) > int(default_file_size_string)):
+        if int(curr_file_size_string) > int(default_file_size_string):
             logging.debug(f'{AUDIO_CAPTURE_TEMP_FILENAME} saved')
             file_saved = True
 
@@ -71,7 +71,7 @@ def capture_audio(file_name):
         result = Popen(f"ps -ef | grep [j]ack_capture | awk '{{print $2}}'", shell=True, stdout=subprocess.PIPE)
         audio_server_pid_string = result.stdout.read().decode('utf-8')
         logging.debug(f'audio_server_pid_string:{audio_server_pid_string}')
-        if audio_server_pid_string == "":
+        if not audio_server_pid_string:
             logging.debug('audio capture stopped running')
             capture_still_running = False
 
@@ -83,12 +83,12 @@ def capture_audio(file_name):
 def merge_video_audio(file_name):
     # Write current stream to file
     clean_file = f'{MEDIA_DIR}/{file_name}-merged.mp4'
-    logging.debug(f'merged_clean_file:{clean_file}')
 
     # merge video and audio file, length being shorter of the two
     command = f"ffmpeg -i {MEDIA_DIR}/{file_name}.mp4 -i {MEDIA_DIR}/{file_name}.wav -c:v copy -c:a aac -shortest {clean_file}"
     try:
         subprocess.run(command, shell=True, check=True)
+        logging.debug(f'finished creating merged_clean_file:{clean_file}')
     except subprocess.CalledProcessError as e:
         logging.error(f'Error while running merge - {e}')
     except Exception as e:
@@ -119,7 +119,7 @@ def get_capture_device_id():
     result = subprocess.run(['arecord', '-l'], stdout=subprocess.PIPE)
     device_string = result.stdout.decode('utf-8').split("\n")
     for line in device_string:
-        if(line.find("card") != -1):
+        if line.find("card") != -1:
             device_id = "hw:" + line[line.find("card")+5] + "," + line[line.find("device")+7]
     logging.debug(f'device_id: {device_id}')
     return device_id
