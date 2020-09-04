@@ -1,0 +1,11 @@
+# * * * * *  command to execute
+# ┬ ┬ ┬ ┬ ┬
+# │ │ │ │ │
+# │ │ │ │ │
+# │ │ │ │ └───── day of week (0 - 7) (0 to 6 are Sunday to Saturday, or use names; 7 is Sunday, the same as 0)
+# │ │ │ └────────── month (1 - 12)
+# │ │ └─────────────── day of month (1 - 31)
+# │ └──────────────────── hour (0 - 23)
+# └───────────────────────── min (0 - 59)
+# delete all missed moment media files at midnight older than 7 days old
+0 0 * * *  /home/pi/missed-moment/scripts/missed-moment-delete-files.sh >> /home/pi/missed-moment/missed-moment-delete-files.log 2>&1

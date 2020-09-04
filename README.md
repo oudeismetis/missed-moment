@@ -8,10 +8,12 @@ As of 07/28/2020 with Raspberry Pi OS, this project is in the "working prototype
 
 ## TODO
 
-1. run headless instructions
+1. apt-pinning?
+1. configuration file for: file deletion, video/audio time up to X seconds
+1. run headless instructions (would need to install pip to a minimum)
 1. figure out filetype issues, converting, etc.
 1. Video playback speed?
-1. audio?
+1. Video/audio tuning?
 1. increase quality? Contrast? etc.
 1. USB with NTFS file system support
 
@@ -74,6 +76,7 @@ As of 07/28/2020 with Raspberry Pi OS, this project is in the "working prototype
         chmod a+x install.sh
         ./install.sh
     ```
+1. Remember to do as the install script says: Logout and login again for the audio server to have configuration recognized - no need to reboot/restart
 1. missed-moment is ready for use, push the button to save a moment!
 1. missed-moment-usb is ready for use, grab videos to a USB
 
@@ -109,7 +112,7 @@ As of 07/28/2020 with Raspberry Pi OS, this project is in the "working prototype
     - While ssh'd onto the raspberry pi - logs should print to the screen
 
 1.  Production Installation
-    - While ssh'd onto the raspberry pi, to view missed-moment/missed-moment-usb status and logs (if you want to tail the logs add "-f" option to journalctl)
+    - While ssh'd onto the raspberry pi, to view missed-moment/missed-moment-usb status and logs (if you want to tail the logs add "-f" option right after journalctl and before -u option)
 
     ```
         sudo systemctl status missed-moment
@@ -118,8 +121,15 @@ As of 07/28/2020 with Raspberry Pi OS, this project is in the "working prototype
         journalctl -u missed-moment-usb
     ```
 
+    - While ssh'd onto the raspberry pi, to view crontab logs
+
+    ```
+        tail -f /home/pi/missed-moment-delete-files.log
+    ```
+
     - The main application is called `missed-moment`
     - The USB dead drop application is called `missed-moment-usb`
     - run `ps -ef | grep python` to look for both processes running
     - run `top` and look for python process(es)
     - Note that the `missed-moment-usb` process is an optional process that only does work when it detects that a USB memory stick has been connected
+    - Files not downloaded within 7 days are deleted (checks at midnight daily)
