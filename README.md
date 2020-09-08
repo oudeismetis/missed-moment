@@ -4,7 +4,7 @@ A running camera feed that only saves videos when you press a button. How many t
 
 ## Project Status
 
-As of 07/28/2020 with Raspberry Pi OS, this project is in the "working prototype" phase of development. It will work, but please be patient with any bugs you are certain to encounter and any holes you may find in this documentation.
+As of 09/2020 with Raspberry Pi OS, this project is in the "working prototype" phase of development. It will work, but please be patient with any bugs you are certain to encounter and any holes you may find in this documentation.
 
 ## TODO
 
@@ -22,67 +22,41 @@ As of 07/28/2020 with Raspberry Pi OS, this project is in the "working prototype
 1. [Raspberry Pi](https://www.raspberrypi.org/products/)
 1. Raspberry Pi [camera module](https://www.raspberrypi.org/products/camera-module-v2/)
 1. SD card with Raspberry Pi OS (minimum OS and SD Card size 4GB)
+1. Newer version of Raspberry Pi OS (Will work on an older OS like Raspbian, but may have issues like Python 3.5+ not installed, camera drivers not pre-installed, etc.)
 1. Network access to the Pi (some older models don't have WiFi/ethernet)
+    * Internet is ONLY needed for initial install
 1. Suggest wall mountable case for the Pi ([Vilros](http://www.vilros.com/) has a good case with a mount for the camera)
 1. Tactile button that can plug into two pins on the Pi board to get input (By default, missed-moment uses GPIO 26/Pin 37 and the Ground on Pin 39 to attach the button [GPIO Reference](https://www.raspberrypi.org/documentation/usage/gpio/)) 
     - here's an [example of one to buy](https://www.amazon.com/Warmstor-3-Pack-Desktop-Button-Computer/dp/B072FMVZJZ/ref=sr_1_3?dchild=1&keywords=2+pin+pc+desktop+power+cable&qid=1596030325&sr=8-3) (or you can make your own)
+1. USB microphone
 
 ## Installation
 
-1. Download a copy of missed-moment to your local computer
+TL/DR: 
+```
+curl -L https://github.com/oudeismetis/missed-moment/raw/master/install.sh | sh
+```
 
-    ```
-        git clone git@github.com:oudeismetis/missed-moment.git
-    ```
 1. Install the OS on the Pi using method of choice.  e.g. [Raspberry Pi Imager](https://www.raspberrypi.org/documentation/installation/installing-images/) or [NOOBS](https://www.raspberrypi.org/downloads/noobs/) 
 1. Boot into the Raspberry Pi
 1. Make sure you've enabled the camera module in the settings
-1. missed-moment requires Python 3.5+ to interface with the camera
-1. Install GPAC to do video format operations and exfat-fuse for USB support
-
-    ```
-        sudo apt update
-        sudo apt install gpac
-        sudo apt install exfat-fuse
-    ```
-
-1. Install Python libraries
-
-    ```
-        pip3 install -r requirements.txt
-    ```
-
-1. Copy the `missed-moment` directory to `/home/pi/`
-
-1. Startup the application
-
-    ```
-        cd /home/pi/missed-moment
-        python3 missed-moment.py
-    ```
-1. missed-moment is ready for use, push the button to save a moment!
-
-
-## Production Install
-1. Download a copy of missed-moment to your local computer
-1. Install the OS on the Pi using method of choice.  e.g. [Raspberry Pi Imager](https://www.raspberrypi.org/documentation/installation/installing-images/) or [NOOBS](https://www.raspberrypi.org/downloads/noobs/) 
-1. Boot into the Raspberry Pi
-1. Make sure you've enabled the camera module in the settings
-1. missed-moment requires Python 3.5+ to interface with the camera
-1. Copy the `missed-moment` directory to `/home/pi/`
 1. Then...
-
     ```
-        chmod a+x install.sh
-        ./install.sh
+        curl -L https://github.com/oudeismetis/missed-moment/raw/master/install.sh | sh
     ```
-1. Remember to do as the install script says: Logout and login again for the audio server to have configuration recognized - no need to reboot/restart
+1. Reboot to ensure all installed dependencies work as expected
 1. missed-moment is ready for use, push the button to save a moment!
-1. missed-moment-usb is ready for use, grab videos to a USB
+    * Wait a moment after startup, then press the button to have it save off the last ~minute of video and audio
+    * Wait a moment after capture, then plug in a USB flash drive, wait for the LEDs to stop flashing, and unplug. Any recordings are now on that USB.
+
+## Contributing
+
+Details on getting setup via git and contributing back can be found [Here](Contribute.md)
 
 ## Other Considerations
 
 - missed-moment is a "Security First" IoT project. As such, internet access is not required for those paranoid about a constant running camera in their home. Videos can be retrieved via SSH/SCP or USB dead drop with simple configuration.
+    * Internet is ONLY needed for initial install
 - Extra features like Dropbox and Slack are unoffically supported and require a `.env` file in the root of your project that define key(s):
 
 

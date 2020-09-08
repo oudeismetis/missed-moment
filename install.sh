@@ -1,6 +1,7 @@
 #!/bin/bash
 
-APP_HOME=/home/pi/missed-moment
+HOME=/home/pi
+APP_HOME=$HOME/missed-moment
 SYSTEMD_HOME=/etc/systemd/system
 MM_SERVICE=missed-moment.service
 MM_USB_SERVICE=missed-moment-usb.service
@@ -8,8 +9,8 @@ USER=pi
 
 echo missed-moment install starting...
 
-cd $APP_HOME
-echo installing libraries...
+cd $HOME
+echo Updating OS and installing system dependencies...
 sudo apt update
 
 # video
@@ -26,7 +27,14 @@ sudo mv /etc/security/limits.d/audio.conf.disabled /etc/security/limits.d/audio.
 sudo apt -y install liblo-tools
 sudo apt -y install jack-capture
 
-pip3 install -r $APP_HOME/requirements.txt
+echo Downloading missed-moment...
+curl -L https://github.com/oudeismetis/missed-moment/archive/master.zip > missed-moment-master.zip
+unzip -q missed-moment-master.zip && mv missed-moment-master missed-moment
+rm missed-moment-master.zip
+cd $APP_HOME
+
+echo Installing Python dependencies...
+pip3 install -r requirements.txt
 
 echo installing $MM_SERVICE...
 sudo cp $APP_HOME/scripts/$MM_SERVICE $SYSTEMD_HOME
@@ -47,4 +55,4 @@ chmod a+x $APP_HOME/scripts/missed-moment-delete-files.sh
 crontab -u $USER $APP_HOME/scripts/crontab-missed-moment
 
 echo missed-moment install complete.
-echo IMPORTANT! Logout and login again for the audio server to have configuration recognized - no need to reboot/restart !IMPORTANT
+echo *****Reboot to ensure all installed dependencies work as expected*****
