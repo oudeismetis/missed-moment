@@ -4,20 +4,17 @@ A running camera feed that only saves videos when you press a button. How many t
 
 ## Project Status
 
-As of 09/2020 with Raspberry Pi OS, this project is in the "working prototype" phase of development. It will work, but please be patient with any bugs you are certain to encounter and any holes you may find in this documentation.
+As of 10/2020 with Raspberry Pi OS, this project is in the "Alpha" phase of development. The current version is stable, but major feature, install, etc changes may happen at any time. Please be patient with any bugs you are certain to encounter and any holes you may find in this documentation.
 
-## TODO
+## Installation
 
-1. apt-pinning?
-1. configuration file for: file deletion, video/audio time up to X seconds
-1. run headless instructions (would need to install pip to a minimum)
-1. figure out filetype issues, converting, etc.
-1. Video playback speed?
-1. Video/audio tuning?
-1. increase quality? Contrast? etc.
-1. USB with NTFS file system support
+### TL/DR 
 
-## Requirements
+```
+curl -L https://github.com/oudeismetis/missed-moment/raw/master/install.sh | sh
+```
+
+### Prerequisites 
 
 1. [Raspberry Pi](https://www.raspberrypi.org/products/)
 1. Raspberry Pi [camera module](https://www.raspberrypi.org/products/camera-module-v2/)
@@ -25,17 +22,12 @@ As of 09/2020 with Raspberry Pi OS, this project is in the "working prototype" p
 1. Newer version of Raspberry Pi OS (Will work on an older OS like Raspbian, but may have issues like Python 3.5+ not installed, camera drivers not pre-installed, etc.)
 1. Network access to the Pi (some older models don't have WiFi/ethernet)
     * Internet is ONLY needed for initial install
-1. Suggest wall mountable case for the Pi ([Vilros](http://www.vilros.com/) has a good case with a mount for the camera)
+1. Recommend a case that has a camera and wall mount ([Vilros](http://www.vilros.com/) has a good case with both)
 1. Tactile button that can plug into two pins on the Pi board to get input (By default, missed-moment uses GPIO 26/Pin 37 and the Ground on Pin 39 to attach the button [GPIO Reference](https://www.raspberrypi.org/documentation/usage/gpio/)) 
     - here's an [example of one to buy](https://www.amazon.com/Warmstor-3-Pack-Desktop-Button-Computer/dp/B072FMVZJZ/ref=sr_1_3?dchild=1&keywords=2+pin+pc+desktop+power+cable&qid=1596030325&sr=8-3) (or you can make your own)
 1. USB microphone
 
-## Installation
-
-TL/DR: 
-```
-curl -L https://github.com/oudeismetis/missed-moment/raw/master/install.sh | sh
-```
+### From Scratch
 
 1. Install the OS on the Pi using method of choice.  e.g. [Raspberry Pi Imager](https://www.raspberrypi.org/documentation/installation/installing-images/) or [NOOBS](https://www.raspberrypi.org/downloads/noobs/) 
 1. Boot into the Raspberry Pi
@@ -48,6 +40,17 @@ curl -L https://github.com/oudeismetis/missed-moment/raw/master/install.sh | sh
 1. missed-moment is ready for use, push the button to save a moment!
     * Wait a moment after startup, then press the button to have it save off the last ~minute of video and audio
     * Wait a moment after capture, then plug in a USB flash drive, wait for the LEDs to stop flashing, and unplug. Any recordings are now on that USB.
+
+## TODO
+
+1. apt-pinning?
+1. configuration file for: file deletion, video/audio time up to X seconds
+1. run headless instructions (would need to install pip to a minimum)
+1. figure out filetype issues, converting, etc.
+1. Video playback speed?
+1. Video/audio tuning?
+1. increase quality? Contrast? etc.
+1. USB with NTFS file system support
 
 ## Contributing
 
