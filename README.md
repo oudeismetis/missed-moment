@@ -18,20 +18,22 @@ curl -L https://github.com/oudeismetis/missed-moment/raw/master/install.sh | sh
 
 1. [Raspberry Pi](https://www.raspberrypi.org/products/)
 1. Raspberry Pi [camera module](https://www.raspberrypi.org/products/camera-module-v2/)
-1. SD card with Raspberry Pi OS (minimum OS and SD Card size 4GB)
-1. Newer version of Raspberry Pi OS (Will work on an older OS like Raspbian, but may have issues like Python 3.5+ not installed, camera drivers not pre-installed, etc.)
-1. Network access to the Pi (some older models don't have WiFi/ethernet)
+1. SD card (minimum 8GB for OS. We recommend 16GB+ for storing video captures)
+1. Newer version of Raspberry Pi OS (Will run on an older OS like Raspbian, but may have issues like Python 3.5+ not installed, camera drivers not pre-installed, etc.)
+1. Network access to the Pi (Newer models have WiFi/ethernet on the board)
     * Internet is ONLY needed for initial install
-1. Recommend a case that has a camera and wall mount ([Vilros](http://www.vilros.com/) has a good case with both)
+1. Recommend a case that has a camera mount and wall mount ([Vilros](http://www.vilros.com/) has a good case with both)
 1. Tactile button that can plug into two pins on the Pi board to get input (By default, missed-moment uses GPIO 26/Pin 37 and the Ground on Pin 39 to attach the button [GPIO Reference](https://www.raspberrypi.org/documentation/usage/gpio/)) 
     - here's an [example of one to buy](https://www.amazon.com/Warmstor-3-Pack-Desktop-Button-Computer/dp/B072FMVZJZ/ref=sr_1_3?dchild=1&keywords=2+pin+pc+desktop+power+cable&qid=1596030325&sr=8-3) (or you can make your own)
 1. USB microphone
 
 ### From Scratch
 
-1. Install the OS on the Pi using method of choice.  e.g. [Raspberry Pi Imager](https://www.raspberrypi.org/documentation/installation/installing-images/) or [NOOBS](https://www.raspberrypi.org/downloads/noobs/) 
+1. Install the OS on the Pi using method of choice.  e.g. [Raspberry Pi Imager](https://www.raspberrypi.org/documentation/installation/installing-images/)
 1. Boot into the Raspberry Pi
+1. `Update Software` when prompted and `Restart`
 1. Make sure you've enabled the camera module in the settings
+    - Menu > `Preferences` > `Interfaces` > Enable `Camera`
 1. Then...
     ```
         curl -L https://github.com/oudeismetis/missed-moment/raw/master/install.sh | sh

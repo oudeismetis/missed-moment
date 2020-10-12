@@ -54,5 +54,7 @@ sudo systemctl daemon-reload
 chmod a+x $APP_HOME/scripts/missed-moment-delete-files.sh
 crontab -u $USER $APP_HOME/scripts/crontab-missed-moment
 
+echo *************************************
 echo missed-moment install complete.
+echo *************************************
 echo *****Reboot to ensure all installed dependencies work as expected*****
