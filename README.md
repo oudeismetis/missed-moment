@@ -56,7 +56,7 @@ curl -L https://github.com/oudeismetis/missed-moment/raw/master/install.sh | sh
 
 ## Contributing
 
-Details on getting setup via git and contributing back can be found [Here](Contribute.md)
+Details on getting setup via git and contributing back can be found [Here](contributing.md)
 
 ## Other Considerations
 
