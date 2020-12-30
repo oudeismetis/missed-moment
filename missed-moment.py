@@ -5,6 +5,7 @@ from os import kill, system
 from signal import SIGTERM, SIGKILL
 import subprocess
 from subprocess import check_call, Popen
+import shlex
 from shutil import move
 from multiprocessing import Process
 
@@ -19,6 +20,19 @@ AUDIO_CAPTURE_REMOTE_PORT = 7777
 AUDIO_CAPTURE_TEMP_FILENAME = f'{MEDIA_DIR}/mm-timemachine.wav'
 
 
+def cmd(x):
+    results = subprocess.run(x, check=True, text=True, stdout=subprocess.PIPE, shell=False)
+    return results.stdout
+
+
+def shell(text):
+    return cmd(shlex.split(text))
+
+
+def foo():
+    print(shell('/bin/ls -al'))
+
+
 def capture_video(camera, stream, file_name):
     # Write current stream to file
     raw_file = f'{MEDIA_DIR}/{file_name}.h264'
@@ -28,7 +42,7 @@ def capture_video(camera, stream, file_name):
     clean_file = f'{MEDIA_DIR}/{file_name}.mp4'
     mp4box_cmd = f'MP4Box -fps 30 -add {raw_file} {clean_file}'
     try:
-        subprocess.run(mp4box_cmd, shell=True, check=True)
+        shell(f'MP4Box -fps 30 -add {raw_file} {clean_file}')
         # TODO slack(clean_file, file_name)
         # upload_to_dropbox(clean_file)
     except subprocess.CalledProcessError as e:
