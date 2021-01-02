@@ -1,5 +1,5 @@
 from os import listdir
-from os.path import exists, expanduser, isfile, dirname, realpath
+from os.path import exists, expanduser, isfile
 import re
 from subprocess import CalledProcessError, check_call
 import logging
