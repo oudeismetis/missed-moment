@@ -1,11 +1,11 @@
 #!/bin/bash
 
-HOME=/home/pi
+USER=pi
+HOME=/home/$USER
 APP_HOME=$HOME/missed-moment
 SYSTEMD_HOME=/etc/systemd/system
 MM_SERVICE=missed-moment.service
 MM_USB_SERVICE=missed-moment-usb.service
-USER=pi
 
 echo missed-moment install starting...
 

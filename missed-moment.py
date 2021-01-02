@@ -11,12 +11,15 @@ from multiprocessing import Process
 from gpiozero import Button
 import picamera
 
+import constants
+
 # TODO from export.slack import slack
 
-MEDIA_DIR = '/missed_moment_media'
-TIME_TO_RECORD = 30  # in seconds
-AUDIO_CAPTURE_REMOTE_PORT = 7777
-AUDIO_CAPTURE_TEMP_FILENAME = f'{MEDIA_DIR}/mm-timemachine.wav'
+
+MEDIA_DIR = constants.MEDIA_DIR
+TIME_TO_RECORD = int(constants.TIME_TO_RECORD)
+AUDIO_CAPTURE_REMOTE_PORT = int(constants.AUDIO_CAPTURE_REMOTE_PORT)
+AUDIO_CAPTURE_TEMP_FILENAME = constants.AUDIO_CAPTURE_TEMP_FILENAME
 
 
 def capture_video(camera, stream, file_name):
@@ -110,8 +113,9 @@ def capture_video_audio(camera, stream):
 
     # restart audio capture for next moment
     start_audio_capture_ringbuffer()
-    # resets video stream to empty.
+    # resets video stream to empty
     stream.clear()
+    logging.info('missed-moment reset and ready to save a moment!')
 
 
 def get_capture_device_id():
@@ -167,9 +171,8 @@ def start_audio_capture_ringbuffer():
     # check UDP port available, TODO make more robust
     result = Popen(f"sudo netstat | grep {str(AUDIO_CAPTURE_REMOTE_PORT)}", shell=True, stdout=subprocess.PIPE)
     remote_port_string = result.stdout.read().decode('utf-8')
-    logging.debug(f'remote_port_string: {remote_port_string}')
     if remote_port_string:
-        logging.error('Audio capture remote port not available')
+        logging.error(f'Audio capture remote port not available: {remote_port_string}')
     
     # jack_capture called with:
     #  -O <udp-port-number>: can be remote-controlled via OSC (Open Sound Control) messages"
@@ -184,6 +187,12 @@ def main():
     # upon exiting the with statement, the camera.close() method is automatically called
     with picamera.PiCamera() as camera:
         logging.basicConfig(level=logging.DEBUG)
+
+        logging.debug(f'MEDIA_DIR:{MEDIA_DIR}')
+        logging.debug(f'TIME_TO_RECORD:{TIME_TO_RECORD},{type(TIME_TO_RECORD)}')
+        logging.debug(f'AUDIO_CAPTURE_REMOTE_PORT:{AUDIO_CAPTURE_REMOTE_PORT},{type(AUDIO_CAPTURE_REMOTE_PORT)}')
+        logging.debug(f'AUDIO_CAPTURE_TEMP_FILENAME:{AUDIO_CAPTURE_TEMP_FILENAME}')
+
         logging.info('starting missed-moment')
 
         button = Button(26)

@@ -7,5 +7,5 @@
 # │ │ └─────────────── day of month (1 - 31)
 # │ └──────────────────── hour (0 - 23)
 # └───────────────────────── min (0 - 59)
-# delete all missed moment media files at midnight older than 7 days old
+# delete all missed moment media files at midnight older than DAYS_TO_KEEP_FILES plus 1 day
 0 0 * * *  /home/pi/missed-moment/scripts/missed-moment-delete-files.sh >> /home/pi/missed-moment/missed-moment-delete-files.log 2>&1

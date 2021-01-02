@@ -1,15 +1,20 @@
 from os import listdir
-from os.path import exists, expanduser, isfile
+from os.path import exists, expanduser, isfile, dirname, realpath
 import re
 from subprocess import CalledProcessError, check_call
 import logging
-
 from pyudev import Context, Monitor
 
-video_pattern = re.compile('missed-moment.*merged.*mp4')
-MEDIA_DIR = '/missed_moment_media'
-USB_MOUNT_DIR = '/missed_moment_usb'
-USB_DIR = USB_MOUNT_DIR + '/missed_moment'
+# import constants
+import sys
+sys.path.append('..')
+import constants
+
+
+VIDEO_PATTERN = re.compile(constants.VIDEO_PATTERN)
+MEDIA_DIR = constants.MEDIA_DIR
+USB_MOUNT_DIR = constants.USB_MOUNT_DIR
+USB_DIR = constants.USB_DIR
 
 
 def _copy_files():
@@ -18,7 +23,7 @@ def _copy_files():
     for filename in listdir(MEDIA_DIR):
         full_path = f'{MEDIA_DIR}/{filename}'
         dest = f'{USB_DIR}/{filename}'
-        if video_pattern.fullmatch(filename) and isfile(full_path):
+        if VIDEO_PATTERN.fullmatch(filename) and isfile(full_path):
             logging.info(f'Moving {full_path} to {dest}')
             # TODO test via su to the user running the process
             try:
@@ -53,7 +58,13 @@ def _process_usb(device):
 
 
 def main():
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
+
+    logging.debug(f'VIDEO_PATTERN:{VIDEO_PATTERN}')
+    logging.debug(f'MEDIA_DIR:{MEDIA_DIR}')
+    logging.debug(f'USB_MOUNT_DIR:{USB_MOUNT_DIR}')
+    logging.debug(f'USB_DIR:{USB_DIR}')
+
     logging.info('starting missed-moment-usb')
     
     context = Context()
@@ -61,10 +72,11 @@ def main():
     monitor.filter_by(subsystem='block', device_type='partition')
     monitor.start()
 
+    logging.info('missed-moment-usb ready!')
+
     for device in iter(monitor.poll, None):
         if device.action == 'add':
             _process_usb(device)
-    logging.info('missed-moment-usb ready')
 
 
 if __name__ == '__main__':
