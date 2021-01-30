@@ -1,4 +1,4 @@
-# This is the constant file that is shared with both python and shell scripts
+# This is the config file that is shared with both python and shell scripts
 # in seconds
 TIME_TO_RECORD=30
 AUDIO_CAPTURE_REMOTE_PORT=7777
