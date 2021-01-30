@@ -5,16 +5,13 @@ from subprocess import CalledProcessError, check_call
 import logging
 from pyudev import Context, Monitor
 
-# import constants
+# import config
 import sys
 sys.path.append('..')
-import constants
+from config import MEDIA_DIR, USB_DIR, USB_MOUNT_DIR, VIDEO_PATTERN
 
 
-VIDEO_PATTERN = re.compile(constants.VIDEO_PATTERN)
-MEDIA_DIR = constants.MEDIA_DIR
-USB_MOUNT_DIR = constants.USB_MOUNT_DIR
-USB_DIR = constants.USB_DIR
+COMPILED_VIDEO_PATTERN = re.compile(VIDEO_PATTERN)
 
 
 def _copy_files():
@@ -23,7 +20,7 @@ def _copy_files():
     for filename in listdir(MEDIA_DIR):
         full_path = f'{MEDIA_DIR}/{filename}'
         dest = f'{USB_DIR}/{filename}'
-        if VIDEO_PATTERN.fullmatch(filename) and isfile(full_path):
+        if COMPILED_VIDEO_PATTERN.fullmatch(filename) and isfile(full_path):
             logging.info(f'Moving {full_path} to {dest}')
             # TODO test via su to the user running the process
             try:
@@ -60,7 +57,7 @@ def _process_usb(device):
 def main():
     logging.basicConfig(level=logging.DEBUG)
 
-    logging.debug(f'VIDEO_PATTERN:{VIDEO_PATTERN}')
+    logging.debug(f'COMPILED_VIDEO_PATTERN:{COMPILED_VIDEO_PATTERN}')
     logging.debug(f'MEDIA_DIR:{MEDIA_DIR}')
     logging.debug(f'USB_MOUNT_DIR:{USB_MOUNT_DIR}')
     logging.debug(f'USB_DIR:{USB_DIR}')

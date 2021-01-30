@@ -11,16 +11,9 @@ from multiprocessing import Process
 from gpiozero import Button
 import picamera
 
-import constants
+from config import AUDIO_CAPTURE_REMOTE_PORT, AUDIO_CAPTURE_TEMP_FILENAME, MEDIA_DIR, TIME_TO_RECORD
 
 # TODO from export.slack import slack
-
-
-MEDIA_DIR = constants.MEDIA_DIR
-TIME_TO_RECORD = int(constants.TIME_TO_RECORD)
-AUDIO_CAPTURE_REMOTE_PORT = int(constants.AUDIO_CAPTURE_REMOTE_PORT)
-AUDIO_CAPTURE_TEMP_FILENAME = constants.AUDIO_CAPTURE_TEMP_FILENAME
-
 
 def capture_video(camera, stream, file_name):
     # Write current stream to file

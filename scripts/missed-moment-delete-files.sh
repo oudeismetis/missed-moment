@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# source constants file
-. ../constants.py
+# source config file
+. ../config.py
 
 echo MEDIA_DIR $MEDIA_DIR, DAYS_TO_KEEP_FILES $DAYS_TO_KEEP_FILES
 
