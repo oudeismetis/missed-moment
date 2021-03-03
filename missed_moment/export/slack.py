@@ -1,9 +1,9 @@
 import logging
 
-from decouple import config
 from slackclient import SlackClient
 
-SLACK_API_TOKEN = config('SLACK_API_TOKEN', default=None)
+# TODO - not tested since switching from python-decouple
+from config import SLACK_API_TOKEN
 
 
 def slack(file_path, file_name):

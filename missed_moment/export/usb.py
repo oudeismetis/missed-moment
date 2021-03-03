@@ -5,9 +5,6 @@ from subprocess import CalledProcessError, check_call
 import logging
 from pyudev import Context, Monitor
 
-# import config
-import sys
-sys.path.append('..')
 from config import MEDIA_DIR, USB_DIR, USB_MOUNT_DIR, VIDEO_PATTERN
 
 
@@ -63,7 +60,7 @@ def main():
     logging.debug(f'USB_DIR:{USB_DIR}')
 
     logging.info('starting missed-moment-usb')
-    
+
     context = Context()
     monitor = Monitor.from_netlink(context)
     monitor.filter_by(subsystem='block', device_type='partition')
