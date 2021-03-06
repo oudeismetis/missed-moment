@@ -28,9 +28,9 @@ sudo apt -y install liblo-tools
 sudo apt -y install jack-capture
 
 echo "Downloading missed-moment..."
-curl -L https://github.com/oudeismetis/missed-moment/archive/master.zip > missed-moment-master.zip
-unzip -q missed-moment-master.zip && mv missed-moment-master missed-moment
-rm missed-moment-master.zip
+curl -L https://github.com/oudeismetis/missed-moment/archive/read-config-file.zip > missed-moment-read-config-file.zip
+unzip -q missed-moment-read-config-file.zip && mv missed-moment-read-config-file missed-moment
+rm missed-moment-read-config-file.zip
 cd $APP_HOME
 
 echo "Installing Python dependencies..."
@@ -55,6 +55,6 @@ chmod a+x $APP_HOME/scripts/missed-moment-delete-files.sh
 crontab -u $USER $APP_HOME/scripts/crontab-missed-moment
 
 echo "*************************************"
-echo "missed-moment install complete.*****"
+echo "missed-moment install complete."
 echo "*************************************"
 echo "*****Reboot to ensure all installed dependencies work as expected.*****"
