@@ -9,7 +9,7 @@ from shutil import move
 from multiprocessing import Process
 
 from gpiozero import Button
-# from picamera import PiCamera, PiCameraCircularIO
+from picamera import PiCamera, PiCameraCircularIO
 
 from config import AUDIO_CAPTURE_REMOTE_PORT, AUDIO_CAPTURE_TEMP_FILENAME, MEDIA_DIR, TIME_TO_RECORD
 
@@ -138,6 +138,7 @@ def start_audio_server(device_id):
     logging.info("Starting audio server")
     result = Popen("ps -ef | grep [j]ackd | awk '{print $2}'", shell=True, stdout=subprocess.PIPE)
     audio_server_pid_string = result.stdout.read().decode('utf-8').split('\n')
+    logging.debug(f'Audio server pid string[{audio_server_pid_string}]')
     for line in audio_server_pid_string:
         if line:
             logging.debug(f'stopping already running jackd {line}')
@@ -146,11 +147,11 @@ def start_audio_server(device_id):
     # pi@raspberrypi:~/missed-moment $ ps -ef | grep jack
     # pi       10814     1  3 15:19 ?        00:00:04 jackd -P70 -p16 -t2000 -dalsa -dhw:1,0 -p128 -n3 -r44100 -s
     # NOT e.g.
-    # pi@raspberrypi:~/missed-moment $ ps -ef | grep jack
     # pi       11010 10990  0 15:23 ?        00:00:00 /bin/sh -c jackd -P70 -p16 -t2000 -dalsa -dhw:1,0 -p128 -n3 -r44100 -s
     # pi       11011 11010  5 15:23 ?        00:00:00 jackd -P70 -p16 -t2000 -dalsa -dhw:1,0 -p128 -n3 -r44100 -s
     command = f"jackd -P70 -p16 -t2000 -dalsa -d{device_id} -p128 -n3 -r44100 -s &"
     system(command)
+    logging.debug(f'jackd start command issued')
 
 
 def start_audio_capture_ringbuffer():
@@ -226,5 +227,5 @@ def main():
 
 
 if __name__ == '__main__':
-    import pdb; pdb.set_trace()
-    # main()
+    # import pdb; pdb.set_trace()
+    main()
