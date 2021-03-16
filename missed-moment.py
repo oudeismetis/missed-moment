@@ -1,6 +1,7 @@
 from datetime import datetime
 import logging
 import traceback
+import time
 from os.path import exists, expanduser
 from os import kill, system
 from signal import SIGTERM, SIGKILL
@@ -97,6 +98,14 @@ def merge_video_audio(file_name):
         logging.error(f'Unhandled exception merge - {e}')
 
 
+def reset_video_audio(stream):
+    # start/restart audio capture for next moment
+    start_audio_capture_ringbuffer()
+    # set/resets video stream to empty for next moment
+    stream.clear()
+    logging.info("video and audio set/reset")
+
+
 def capture_video_audio(camera, stream):
     file_name = f'missed-moment-{datetime.now().strftime("%Y-%m-%d-%H-%M-%S")}'
     # capture video and audio both need to happen in parallel
@@ -109,11 +118,8 @@ def capture_video_audio(camera, stream):
 
     # merge video and audio
     merge_video_audio(file_name)
-
-    # restart audio capture for next moment
-    start_audio_capture_ringbuffer()
-    # resets video stream to empty.
-    stream.clear()
+    # reset
+    reset_video_audio(stream)
 
 
 def get_capture_device_id():
@@ -156,6 +162,11 @@ def start_audio_server(device_id):
     # -d: driver backend
     #   -dalsa -C provide only capture ports
     #   -p: period - This value must be a power of 2, and the default is 1024
+    #       If the period should be set as low as possible to not get these types of errors.  Start with 128, go up through 256, 512, 1024, 2048 and so on.
+    # raspberrypi python3[6384]: JackEngine::XRun: client = jack_capture was not finished, state = Triggered
+    # raspberrypi python3[6384]: JackAudioDriver::ProcessGraphAsyncMaster: Process error
+    # raspberrypi python3[6384]: JackEngine::XRun: client = jack_capture was not finished, state = Running
+    # raspberrypi python3[6384]: JackAudioDriver::ProcessGraphAsyncMaster: Process error
     #   -n: number of periods of playback latency
     #   -r: sample rate, default is 48000
     #   -s: softmode - this makes jack less likely to disconnect unresponsive ports
@@ -169,8 +180,13 @@ def start_audio_server(device_id):
     # pi@raspberrypi:~/missed-moment $ ps -ef | grep jack
     # pi       11010 10990  0 15:23 ?        00:00:00 /bin/sh -c jackd -P70 -p16 -t2000 -dalsa -dhw:1,0 -p128 -n3 -r44100 -s
     # pi       11011 11010  5 15:23 ?        00:00:00 jackd -P70 -p16 -t2000 -dalsa -dhw:1,0 -p128 -n3 -r44100 -s
-    command = f"jackd -P70 -p16 -t2000 -dalsa -C -d{device_id} -p128 -n3 -r44100 -s &"
+    command = f"jackd -P70 -p16 -t2000 -dalsa -C -d{device_id} -p256 -n3 -r44100 -s &"
+    logging.info(command)
     system(command)
+    # sleep 10 seconds wait for it to start up
+    time_to_sleep = 10
+    logging.info(f'sleep for {time_to_sleep} seconds so jackd server can finish starting')
+    time.sleep(time_to_sleep)
 
 
 def start_audio_capture_ringbuffer():
@@ -194,7 +210,7 @@ def start_audio_capture_ringbuffer():
     #  --timemachine: run in ringbuffer mode
     #  --timemachine-prebuffer: how much time to keep inr ingbuffer in seconds
     command = f"jack_capture -O {str(AUDIO_CAPTURE_REMOTE_PORT)} --daemon --port '*' --timemachine --timemachine-prebuffer {str(TIME_TO_RECORD)} {AUDIO_CAPTURE_TEMP_FILENAME} &"
-    logging.debug(command)
+    logging.info(command)
     system(command)
     
     
@@ -230,6 +246,10 @@ def main():
             start_audio_server(device_id) 
 
             # make sure audio server is running before starting audio capture client
+            # You will see this error if jackd server is not finished starting when starting jack_capture client
+            # raspberrypi python3[387]: Cannot connect to server socket err = No such file or directory
+            # raspberrypi python3[387]: Cannot connect to server request channel
+            # raspberrypi python3[387]: jack server is not running or cannot be started
             is_running = False
             while not is_running:
                 result = check_audio_server_running()
@@ -238,8 +258,8 @@ def main():
                 else:
                     logging.debug("audio server not running yet, waiting...")
 
-            # start audio capture buffer
-            start_audio_capture_ringbuffer()
+            # set audio and video
+            reset_video_audio(stream)
 
             logging.info('missed-moment ready to save a moment!')
             # pass a lambda function into 'when_pressed' which contains variables the function can access
