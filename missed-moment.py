@@ -1,5 +1,6 @@
 from datetime import datetime
 import logging
+import traceback
 from os.path import exists, expanduser
 from os import kill, system
 from signal import SIGTERM, SIGKILL
@@ -7,6 +8,7 @@ import subprocess
 from subprocess import check_call, Popen
 from shutil import move
 from multiprocessing import Process
+from sys import exc_info
 
 from gpiozero import Button
 import picamera
@@ -125,6 +127,27 @@ def get_capture_device_id():
     return device_id
 
 
+def check_audio_server_running():
+    logging.info("Check audio server is running")
+    result = Popen("ps -ef | grep [j]ackd | awk '{print $2}'", shell=True, stdout=subprocess.PIPE)
+    audio_server_pid_string = result.stdout.read().decode('utf-8').split('\n')
+    is_running = False
+    for line in audio_server_pid_string:
+        if line:
+            is_running = True
+            break
+    return is_running
+
+
+def stop_audio_server():
+    result = Popen("ps -ef | grep [j]ackd | awk '{print $2}'", shell=True, stdout=subprocess.PIPE)
+    audio_server_pid_string = result.stdout.read().decode('utf-8').split('\n')
+    for line in audio_server_pid_string:
+        if line:
+            logging.debug(f'stopping already running jackd {line}')
+            kill(int(line), SIGTERM)
+
+
 def start_audio_server(device_id):
     # jackd parameters:
     # --no-mlock: doesn't work
@@ -138,12 +161,7 @@ def start_audio_server(device_id):
     #   -s: softmode - this makes jack less likely to disconnect unresponsive ports
     #       when running without --realtime
     logging.info("Starting audio server")
-    result = Popen("ps -ef | grep [j]ackd | awk '{print $2}'", shell=True, stdout=subprocess.PIPE)
-    audio_server_pid_string = result.stdout.read().decode('utf-8').split('\n')
-    for line in audio_server_pid_string:
-        if line:
-            logging.debug(f'stopping already running jackd {line}')
-            kill(int(line), SIGTERM)
+    stop_audio_server()
     # NOTE:  Want this to be running as just one background process, e.g.
     # pi@raspberrypi:~/missed-moment $ ps -ef | grep jack
     # pi       10814     1  3 15:19 ?        00:00:04 jackd -P70 -p16 -t2000 -dalsa -dhw:1,0 -p128 -n3 -r44100 -s
@@ -151,7 +169,7 @@ def start_audio_server(device_id):
     # pi@raspberrypi:~/missed-moment $ ps -ef | grep jack
     # pi       11010 10990  0 15:23 ?        00:00:00 /bin/sh -c jackd -P70 -p16 -t2000 -dalsa -dhw:1,0 -p128 -n3 -r44100 -s
     # pi       11011 11010  5 15:23 ?        00:00:00 jackd -P70 -p16 -t2000 -dalsa -dhw:1,0 -p128 -n3 -r44100 -s
-    command = f"jackd -P70 -p16 -t2000 -dalsa -d{device_id} -p128 -n3 -r44100 -s &"
+    command = f"jackd -P70 -p16 -t2000 -dalsa -C -d{device_id} -p128 -n3 -r44100 -s &"
     system(command)
 
 
@@ -178,7 +196,7 @@ def start_audio_capture_ringbuffer():
     command = f"jack_capture -O {str(AUDIO_CAPTURE_REMOTE_PORT)} --daemon --port '*' --timemachine --timemachine-prebuffer {str(TIME_TO_RECORD)} {AUDIO_CAPTURE_TEMP_FILENAME} &"
     logging.debug(command)
     system(command)
-
+    
     
 def main():
     # upon exiting the with statement, the camera.close() method is automatically called
@@ -186,39 +204,51 @@ def main():
         logging.basicConfig(level=logging.DEBUG)
         logging.info('starting missed-moment')
 
-        button = Button(26)
-        camera.resolution = (1280, 720)
-        # Keep a buffer of 30sec. (Actually ends up being ~60 for reasons)
-        # https://picamera.readthedocs.io/en/release-1.11/faq.html#why-are-there-more-than-20-seconds-of-video-in-the-circular-buffer
-        stream = picamera.PiCameraCircularIO(camera, seconds=TIME_TO_RECORD)
+        try:
+            button = Button(26)
+            camera.resolution = (1280, 720)
+            # Keep a buffer of 30sec. (Actually ends up being ~60 for reasons)
+            # https://picamera.readthedocs.io/en/release-1.11/faq.html#why-are-there-more-than-20-seconds-of-video-in-the-circular-buffer
+            stream = picamera.PiCameraCircularIO(camera, seconds=TIME_TO_RECORD)
 
-        if not exists(MEDIA_DIR):
-            check_call(['sudo', 'mkdir', expanduser(MEDIA_DIR)])
+            if not exists(MEDIA_DIR):
+                check_call(['sudo', 'mkdir', expanduser(MEDIA_DIR)])
+                logging.debug(f'Created dir {expanduser(MEDIA_DIR)}')
             # add write permissions for all
             check_call(['sudo', 'chmod', 'a+w', expanduser(MEDIA_DIR)])
-    
-        # video
-        camera.start_recording(stream, format='h264')
+            logging.debug(f'Added write permissions for all to dir {expanduser(MEDIA_DIR)}')
+        
+            # video
+            camera.start_recording(stream, format='h264')
 
-        # get the audio capture device_id
-        device_id = get_capture_device_id()
-        if not device_id:
-            logging.error('No audio capture device detected')
+            # get the audio capture device_id
+            device_id = get_capture_device_id()
+            if not device_id:
+                logging.error('No audio capture device detected')
 
-        # start audio server
-        start_audio_server(device_id) 
+            # start audio server
+            start_audio_server(device_id) 
 
-        # start audio capture buffer
-        start_audio_capture_ringbuffer()
+            # make sure audio server is running before starting audio capture client
+            is_running = False
+            while not check_audio_server_running():
+                logging.debug("audio server not running yet, waiting...")
+                is_running = True
 
-        logging.info('missed-moment ready to save a moment!')
-        # pass a lambda function into 'when_pressed' which contains variables the function can access
-        button.when_pressed = lambda : capture_video_audio(camera, stream)
-        try:
+            # start audio capture buffer
+            start_audio_capture_ringbuffer()
+
+            logging.info('missed-moment ready to save a moment!')
+            # pass a lambda function into 'when_pressed' which contains variables the function can access
+            button.when_pressed = lambda : capture_video_audio(camera, stream)
             while True:
                 camera.wait_recording(1)
+
+        except: # catch all exceptions
+            traceback.print_exc()
         finally:
             logging.debug('closing camera and audio server')
+            stop_audio_server()
             camera.stop_recording()
 
 
