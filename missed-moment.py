@@ -231,9 +231,12 @@ def main():
 
             # make sure audio server is running before starting audio capture client
             is_running = False
-            while not check_audio_server_running():
-                logging.debug("audio server not running yet, waiting...")
-                is_running = True
+            while not is_running:
+                result = check_audio_server_running()
+                if result:
+                    is_running = True
+                else:
+                    logging.debug("audio server not running yet, waiting...")
 
             # start audio capture buffer
             start_audio_capture_ringbuffer()
