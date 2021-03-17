@@ -11,21 +11,22 @@ echo missed-moment install starting...
 
 cd $HOME
 echo Updating OS and installing system dependencies...
-sudo apt update
+sudo apt-get update
 
 # video
-sudo apt -y install gpac
+sudo apt-get -y install gpac
 
 # USB
-sudo apt -y install exfat-fuse
+sudo apt-get -y install exfat-fuse
 
 # audio server
-sudo apt -y install jackd2
+sudo apt-get -y install jackd2
 # modify /etc/security/limits.d/audio.conf to bring realtime priorities to the audio group (which is usually fine for a single user desktop usage)
+# the audio.conf file already exists now, keep here
 sudo mv /etc/security/limits.d/audio.conf.disabled /etc/security/limits.d/audio.conf
 # audio capture
-sudo apt -y install liblo-tools
-sudo apt -y install jack-capture
+sudo apt-get -y install liblo-tools
+sudo apt-get -y install jack-capture
 
 echo Downloading missed-moment...
 curl -L https://github.com/oudeismetis/missed-moment/archive/master.zip > missed-moment-master.zip
