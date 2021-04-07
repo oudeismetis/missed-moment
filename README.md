@@ -103,7 +103,7 @@ Details on getting setup via git and contributing back can be found [Here](contr
     - While ssh'd onto the raspberry pi, to view crontab logs
 
     ```
-        tail -f /home/pi/missed-moment-delete-files.log
+        tail -f /home/pi/missed-moment/missed-moment-delete-files.log
     ```
 
     - The main application is called `missed-moment`

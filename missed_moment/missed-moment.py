@@ -9,20 +9,17 @@ from shutil import move
 from multiprocessing import Process
 
 from gpiozero import Button
-import picamera
+from picamera import PiCamera, PiCameraCircularIO
+
+from config import AUDIO_CAPTURE_REMOTE_PORT, AUDIO_CAPTURE_TEMP_FILENAME, MEDIA_DIR, TIME_TO_RECORD
 
 # TODO from export.slack import slack
-
-MEDIA_DIR = '/missed_moment_media'
-TIME_TO_RECORD = 30  # in seconds
-AUDIO_CAPTURE_REMOTE_PORT = 7777
-AUDIO_CAPTURE_TEMP_FILENAME = f'{MEDIA_DIR}/mm-timemachine.wav'
 
 
 def capture_video(camera, stream, file_name):
     # Write current stream to file
     raw_file = f'{MEDIA_DIR}/{file_name}.h264'
-    stream.copy_to(raw_file, seconds=TIME_TO_RECORD) # copy specific number of seconds from stream
+    stream.copy_to(raw_file, seconds=TIME_TO_RECORD)  # copy specific number of seconds from stream
 
     # Convert to .mp4
     clean_file = f'{MEDIA_DIR}/{file_name}.mp4'
@@ -42,7 +39,7 @@ def capture_audio(file_name):
     clean_file = f'{MEDIA_DIR}/{file_name}.wav'
     logging.debug(f'audio_clean_file:{clean_file}')
 
-    # get size of the default time machine file, and as soon as it is bigger we know 
+    # get size of the default time machine file, and as soon as it is bigger we know
     # time machine has started recording to file
     result = Popen(f"ls -la {AUDIO_CAPTURE_TEMP_FILENAME} | awk '{{print $5}}'", shell=True, stdout=subprocess.PIPE)
     default_file_size_string = result.stdout.read().decode('utf-8')
@@ -64,7 +61,7 @@ def capture_audio(file_name):
 
     command = f"oscsend localhost {AUDIO_CAPTURE_REMOTE_PORT} /jack_capture/stop"
     system(command)
-    
+
     # wait until jack_capture process is stopped
     capture_still_running = True
     while capture_still_running:
@@ -110,8 +107,9 @@ def capture_video_audio(camera, stream):
 
     # restart audio capture for next moment
     start_audio_capture_ringbuffer()
-    # resets video stream to empty.
+    # resets video stream to empty
     stream.clear()
+    logging.info('missed-moment reset and ready to save a moment!')
 
 
 def get_capture_device_id():
@@ -140,6 +138,7 @@ def start_audio_server(device_id):
     logging.info("Starting audio server")
     result = Popen("ps -ef | grep [j]ackd | awk '{print $2}'", shell=True, stdout=subprocess.PIPE)
     audio_server_pid_string = result.stdout.read().decode('utf-8').split('\n')
+    logging.debug(f'Audio server pid string[{audio_server_pid_string}]')
     for line in audio_server_pid_string:
         if line:
             logging.debug(f'stopping already running jackd {line}')
@@ -148,11 +147,11 @@ def start_audio_server(device_id):
     # pi@raspberrypi:~/missed-moment $ ps -ef | grep jack
     # pi       10814     1  3 15:19 ?        00:00:04 jackd -P70 -p16 -t2000 -dalsa -dhw:1,0 -p128 -n3 -r44100 -s
     # NOT e.g.
-    # pi@raspberrypi:~/missed-moment $ ps -ef | grep jack
     # pi       11010 10990  0 15:23 ?        00:00:00 /bin/sh -c jackd -P70 -p16 -t2000 -dalsa -dhw:1,0 -p128 -n3 -r44100 -s
     # pi       11011 11010  5 15:23 ?        00:00:00 jackd -P70 -p16 -t2000 -dalsa -dhw:1,0 -p128 -n3 -r44100 -s
     command = f"jackd -P70 -p16 -t2000 -dalsa -d{device_id} -p128 -n3 -r44100 -s &"
     system(command)
+    logging.debug(f'jackd start command issued')
 
 
 def start_audio_capture_ringbuffer():
@@ -167,10 +166,9 @@ def start_audio_capture_ringbuffer():
     # check UDP port available, TODO make more robust
     result = Popen(f"sudo netstat | grep {str(AUDIO_CAPTURE_REMOTE_PORT)}", shell=True, stdout=subprocess.PIPE)
     remote_port_string = result.stdout.read().decode('utf-8')
-    logging.debug(f'remote_port_string: {remote_port_string}')
     if remote_port_string:
-        logging.error('Audio capture remote port not available')
-    
+        logging.error(f'Audio capture remote port not available: {remote_port_string}')
+
     # jack_capture called with:
     #  -O <udp-port-number>: can be remote-controlled via OSC (Open Sound Control) messages"
     #  --timemachine: run in ringbuffer mode
@@ -179,24 +177,30 @@ def start_audio_capture_ringbuffer():
     logging.debug(command)
     system(command)
 
-    
+
 def main():
     # upon exiting the with statement, the camera.close() method is automatically called
-    with picamera.PiCamera() as camera:
+    with PiCamera() as camera:
         logging.basicConfig(level=logging.DEBUG)
+
+        logging.debug(f'MEDIA_DIR:{MEDIA_DIR}')
+        logging.debug(f'TIME_TO_RECORD:{TIME_TO_RECORD},{type(TIME_TO_RECORD)}')
+        logging.debug(f'AUDIO_CAPTURE_REMOTE_PORT:{AUDIO_CAPTURE_REMOTE_PORT},{type(AUDIO_CAPTURE_REMOTE_PORT)}')
+        logging.debug(f'AUDIO_CAPTURE_TEMP_FILENAME:{AUDIO_CAPTURE_TEMP_FILENAME}')
+
         logging.info('starting missed-moment')
 
         button = Button(26)
         camera.resolution = (1280, 720)
         # Keep a buffer of 30sec. (Actually ends up being ~60 for reasons)
         # https://picamera.readthedocs.io/en/release-1.11/faq.html#why-are-there-more-than-20-seconds-of-video-in-the-circular-buffer
-        stream = picamera.PiCameraCircularIO(camera, seconds=TIME_TO_RECORD)
+        stream = PiCameraCircularIO(camera, seconds=TIME_TO_RECORD)
 
         if not exists(MEDIA_DIR):
             check_call(['sudo', 'mkdir', expanduser(MEDIA_DIR)])
             # add write permissions for all
             check_call(['sudo', 'chmod', 'a+w', expanduser(MEDIA_DIR)])
-    
+
         # video
         camera.start_recording(stream, format='h264')
 
@@ -206,14 +210,14 @@ def main():
             logging.error('No audio capture device detected')
 
         # start audio server
-        start_audio_server(device_id) 
+        start_audio_server(device_id)
 
         # start audio capture buffer
         start_audio_capture_ringbuffer()
 
         logging.info('missed-moment ready to save a moment!')
         # pass a lambda function into 'when_pressed' which contains variables the function can access
-        button.when_pressed = lambda : capture_video_audio(camera, stream)
+        button.when_pressed = lambda: capture_video_audio(camera, stream)
         try:
             while True:
                 camera.wait_recording(1)
@@ -223,4 +227,5 @@ def main():
 
 
 if __name__ == '__main__':
+    # import pdb; pdb.set_trace()
     main()

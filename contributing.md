@@ -29,7 +29,7 @@
 1. Startup the application
 
     ```
-        cd /home/pi/missed-moment
+        cd /home/pi/missed-moment/missed_moment
         python3 missed-moment.py
     ```
 1. missed-moment is ready for use, push the button to save a moment!

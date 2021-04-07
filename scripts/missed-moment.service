@@ -11,7 +11,7 @@ LimitMEMLOCK=infinity
 Environment="DISPLAY=:0"
 Environment="JACK_NO_AUDIO_RESERVATION=1"
 ExecStart=/usr/bin/python3 -u missed-moment.py
-WorkingDirectory=/home/pi/missed-moment
+WorkingDirectory=/home/pi/missed-moment/missed_moment
 StandardOutput=inherit
 StandardError=inherit
 Restart=on-failure

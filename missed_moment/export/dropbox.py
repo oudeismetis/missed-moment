@@ -1,10 +1,11 @@
 import os
 
-from decouple import config
 from dropbox import Dropbox, files as dbx_files
 
+# TODO - not tested since switching from python-decouple
+from config import DROPBOX_API_KEY
+
 FILE_CHUNK_SIZE = 100 * 1024 * 1024  # 100MB
-DROPBOX_API_KEY = config('DROPBOX_API_KEY', default=None)
 
 
 def _upload_dropbox_file_chucks(dbx, f, file_path, file_size):

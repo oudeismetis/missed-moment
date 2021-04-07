@@ -2,5 +2,4 @@
 # slackclient==1.0.5
 gpiozero==1.5.1
 picamera==1.13
-python-decouple==3.3
 pyudev==0.22.0
