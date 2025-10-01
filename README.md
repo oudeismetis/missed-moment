@@ -11,8 +11,10 @@ issue](https://github.com/oudeismetis/missed-moment/issues/new). If there is eno
 
 For full project details, see [oudeis.co/projects/missed-moment](https://www.oudeis.co/projects/missed-moment/)
 
+<img src="https://www.oudeis.co/img/2025/missed_moment.gif" />
+
 <div align="center">
-<img src="https://www.oudeis.co/img/2025/missed_moment.gif" width="100%" />
+    <img src="https://www.oudeis.co/img/2025/missed_moment.gif" width="100%" />
 </div>
 ![Missed Moment Example](https://www.oudeis.co/img/2025/missed_moment.gif)
 
