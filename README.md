@@ -4,6 +4,13 @@ A running camera feed that only saves videos when you press a button. How many t
 
 ## Project Status
 
+NO UPDATES SINCE DECEMBER 2020
+
+It may work, but there may be bugs. If you have any issues, please [open a GitHub
+issue](https://github.com/oudeismetis/missed-moment/issues/new). If there is enough interest in this project I'm willing to continue to support it.
+
+For full project details, see [oudeis.co/projects/missed-moment](https://www.oudeis.co/projects/missed-moment/)
+
 As of 10/2020 with Raspberry Pi OS, this project is in the "Alpha" phase of development. The current version is stable, but major feature, install, etc changes may happen at any time. Please be patient with any bugs you are certain to encounter and any holes you may find in this documentation.
 
 ## Installation
