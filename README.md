@@ -11,13 +11,6 @@ issue](https://github.com/oudeismetis/missed-moment/issues/new). If there is eno
 
 For full project details, see [oudeis.co/projects/missed-moment](https://www.oudeis.co/projects/missed-moment/)
 
-<img src="https://www.oudeis.co/img/2025/missed_moment.gif" />
-
-<div align="center">
-    <img src="https://www.oudeis.co/img/2025/missed_moment.gif" width="100%" />
-</div>
-![Missed Moment Example](https://www.oudeis.co/img/2025/missed_moment.gif)
-![Example](https://www.oudeis.co/img/2025/missed_moment.gif)
 ![](https://www.oudeis.co/img/2025/missed_moment.gif)
 
 As of 10/2020 with Raspberry Pi OS, this project is in the "Alpha" phase of development. The current version is stable, but major feature, install, etc changes may happen at any time. Please be patient with any bugs you are certain to encounter and any holes you may find in this documentation.
